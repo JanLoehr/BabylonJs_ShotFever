@@ -41,6 +41,15 @@ export class Scene_Level1 extends Scene_Base {
       "./models/",
       "Level_01.glb"
     );
-    levelGeo.meshes.forEach((m) => (m.checkCollisions = true));
+
+    levelGeo.meshes.forEach((m) => {
+      if (m.name.includes("Collision")) {
+        m.checkCollisions = true;
+      }
+
+      if(m.name.includes("Invisible")){
+        m.isVisible = false;
+      }
+    });
   }
 }

@@ -28,6 +28,8 @@ export class Player {
   private idle: AnimationGroup;
   private walk: AnimationGroup;
 
+  private deltaTime: number;
+
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     this.input = new InputController(scene);
 
@@ -35,6 +37,8 @@ export class Player {
   }
 
   public update(deltaTime: number) {
+    this.deltaTime = deltaTime;
+
     let direction = new Vector2(this.input.horizontal, this.input.vertical);
 
     let movement = new Vector3(
@@ -44,22 +48,24 @@ export class Player {
     );
 
     this.root.moveWithCollisions(movement);
+    this.root.position.y = 0;
 
     let target: Quaternion;
     if (!direction.equals(Vector2.Zero())) {
       let angle = Math.atan2(direction.x, direction.y);
       target = Quaternion.FromEulerAngles(0, angle, 0);
-    } else {
-      target = Quaternion.FromEulerAngles(0, Math.PI, 0);
+
+      this.meshRoot.rotationQuaternion = Quaternion.Slerp(
+        this.meshRoot.rotationQuaternion,
+        target,
+        deltaTime * 10
+      );
     }
-    this.meshRoot.rotationQuaternion = Quaternion.Slerp(
-      this.meshRoot.rotationQuaternion,
-      target,
-      deltaTime * 10
-    );
 
     this.updateAnimation(direction);
   }
+  private animationBlend: number = 0;
+  private nextAnimation: AnimationGroup;
 
   private updateAnimation(moveDir: Vector2) {
     let nextAnimation: AnimationGroup = this.idle;
@@ -69,12 +75,32 @@ export class Player {
     }
 
     if (nextAnimation != this.currentAnimation) {
-      if (this.currentAnimation) {
-        this.currentAnimation.stop();
+      if (this.animationBlend === 1) {
+        this.animationBlend = 0;
       }
 
-      this.currentAnimation = nextAnimation;
-      this.currentAnimation.play(this.currentAnimation.loopAnimation);
+      this.nextAnimation = nextAnimation;
+      this.nextAnimation.setWeightForAllAnimatables(0);
+      this.nextAnimation.play(this.nextAnimation.loopAnimation);
+    }
+
+    if (this.currentAnimation && this.nextAnimation) {
+      if (this.animationBlend < 1) {
+        this.currentAnimation.setWeightForAllAnimatables(
+          1 - this.animationBlend
+        );
+        this.nextAnimation.setWeightForAllAnimatables(this.animationBlend);
+
+        this.animationBlend += this.deltaTime * 4;
+
+        if (this.animationBlend >= 1) {
+          this.animationBlend = 1;
+
+          this.currentAnimation.stop();
+          this.currentAnimation = this.nextAnimation;
+          this.nextAnimation = undefined;
+        }
+      }
     }
   }
 
@@ -113,16 +139,11 @@ export class Player {
       "Robot.glb"
     );
 
-    console.log(result);
-
     result.meshes.forEach((m) => {
       m.isPickable = false;
       m.checkCollisions = false;
       m.parent = this.meshRoot;
     });
-
-    let collision = result.meshes.find((n) => n.name === "Collision");
-    collision.isVisible = false;
 
     this.idle = result.animationGroups[1];
     this.walk = result.animationGroups[5];

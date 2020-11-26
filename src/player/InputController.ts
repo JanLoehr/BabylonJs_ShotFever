@@ -5,8 +5,7 @@ export class InputController {
   public vertical: number = 0;
 
   public dashPressed: boolean = false;
-  public usePressed: boolean = false;
-  public sprintPressed: boolean = false;
+  public actionPressed: boolean = false;
 
   private inputMap: { [key: string]: boolean } = {};
 
@@ -15,13 +14,13 @@ export class InputController {
 
     scene.actionManager.registerAction(
       new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (e) => {
-        this.inputMap[e.sourceEvent.key] = true;
+        this.inputMap[(e.sourceEvent.key as string).toLowerCase()] = true;
       })
     );
 
     scene.actionManager.registerAction(
       new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (e) => {
-        this.inputMap[e.sourceEvent.key] = false;
+        this.inputMap[(e.sourceEvent.key as string).toLowerCase()] = false;
       })
     );
 
@@ -31,20 +30,23 @@ export class InputController {
   }
 
   private updateKeyboardInput() {
-    if (this.inputMap["w"] || this.inputMap["W"]) {
+    if (this.inputMap["w"]) {
       this.vertical = 1;
-    } else if (this.inputMap["s"] || this.inputMap["S"]) {
+    } else if (this.inputMap["s"]) {
       this.vertical = -1;
     } else {
       this.vertical = 0;
     }
 
-    if (this.inputMap["a"] || this.inputMap["A"]) {
+    if (this.inputMap["a"]) {
       this.horizontal = -1;
-    } else if (this.inputMap["d"] || this.inputMap["D"]) {
+    } else if (this.inputMap["d"]) {
       this.horizontal = 1;
     } else {
       this.horizontal = 0;
     }
+
+    this.actionPressed = this.inputMap[" "];
+    this.dashPressed = this.inputMap["shift"];
   }
 }

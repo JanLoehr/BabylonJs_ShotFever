@@ -1,11 +1,13 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine } from "@babylonjs/core";
+import { DebugLayer, Engine, Scene } from "@babylonjs/core";
 import { Scene_Level1 } from "./scenes/Scene_Level1";
+import { Scene_Base } from "./scenes/Scene_Base";
 
 class App {
   private canvas: HTMLCanvasElement = undefined;
+  private currentScene: Scene_Base;
 
   constructor() {
     // create the canvas html element and attach it to the webpage
@@ -14,15 +16,16 @@ class App {
     // initialize babylon scene and engine
     var engine = new Engine(this.canvas, true);
     var scene = new Scene_Level1(engine, this.canvas);
+    this.currentScene = scene;
 
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
       // Shift+Ctrl+Alt+I
       if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === "I") {
-        if (scene.debugLayer.isVisible()) {
-          scene.debugLayer.hide();
+        if (this.currentScene.debugLayer.isVisible()) {
+          this.currentScene.debugLayer.hide();
         } else {
-          scene.debugLayer.show();
+          this.currentScene.debugLayer.show();
         }
       }
     });
@@ -33,8 +36,8 @@ class App {
 
     // run the main render loop
     engine.runRenderLoop(() => {
-      scene.update();
-      scene.render();
+      this.currentScene.update();
+      this.currentScene.render();
     });
   }
 
