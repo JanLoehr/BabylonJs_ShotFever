@@ -1,10 +1,13 @@
 import { Engine, Scene } from "@babylonjs/core";
+import { Player } from "../player/Player";
 
 export class Scene_Base extends Scene {
   protected engine: Engine;
   protected canvas: HTMLCanvasElement;
 
   protected scene: Scene;
+
+  protected player: Player;
 
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     super(engine);
@@ -17,6 +20,10 @@ export class Scene_Base extends Scene {
 
   public async loadScene(): Promise<Scene_Base> {
     return this;
+  }
+
+  public update() {
+    this.deltaTime = this.engine.getDeltaTime() / 1000;
   }
 
   public render() {}

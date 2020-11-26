@@ -1,15 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import {
-  Engine,
-  Scene,
-  ArcRotateCamera,
-  Vector3,
-  HemisphericLight,
-  Mesh,
-  MeshBuilder,
-} from "@babylonjs/core";
+import { DebugLayer, Engine, Scene } from "@babylonjs/core";
 import { Scene_Level1 } from "./scenes/Scene_Level1";
 import { SceneKeys, SceneManager } from "./scenes/SceneManager";
 
@@ -67,7 +59,7 @@ class App {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     canvas.id = "gameCanvas";
-    
+
     document.body.appendChild(canvas);
 
     return canvas;
