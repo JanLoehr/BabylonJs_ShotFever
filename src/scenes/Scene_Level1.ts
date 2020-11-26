@@ -8,6 +8,7 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { subSurfaceScatteringFunctions } from "@babylonjs/core/Shaders/ShadersInclude/subSurfaceScatteringFunctions";
+import { Interactable_Base } from "../interaction/interactable_base";
 import { Player } from "../player/Player";
 import { Scene_Base } from "./Scene_Base";
 
@@ -51,6 +52,9 @@ export class Scene_Level1 extends Scene_Base {
         m.isVisible = false;
       }
     });
+
+    let interactable = new Interactable_Base(this.scene, this.player);
+    interactable.mesh.position = new Vector3(-2, 1, 0);
 
     return this;
   }

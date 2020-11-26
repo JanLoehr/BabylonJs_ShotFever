@@ -15,6 +15,18 @@ export class SceneManager {
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     this.scenes[SceneKeys.Menu] = new Scene_Base(engine, canvas);
     this.scenes[SceneKeys.Scene_One] = new Scene_Level1(engine, canvas);
+
+    // hide/show the Inspector
+    window.addEventListener("keydown", (ev) => {
+      // Shift+Ctrl+Alt+I
+      if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === "I") {
+        if (this.currentScene.debugLayer.isVisible()) {
+          this.currentScene.debugLayer.hide();
+        } else {
+          this.currentScene.debugLayer.show();
+        }
+      }
+    });
   }
 
   public async loadScene(sceneKey: SceneKeys) {
@@ -24,6 +36,12 @@ export class SceneManager {
   public renderCurrentScene() {
     if (this.currentScene) {
       this.currentScene.render();
+    }
+  }
+
+  public updateCurrentScene() {
+    if (this.currentScene) {
+      this.currentScene.update();
     }
   }
 }

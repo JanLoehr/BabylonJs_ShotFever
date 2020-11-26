@@ -12,6 +12,7 @@ import {
   Vector2,
   Vector3,
 } from "@babylonjs/core";
+import { Interactable_Base } from "../interaction/interactable_base";
 import { InputController } from "./InputController";
 
 export class Player {
@@ -24,21 +25,62 @@ export class Player {
   private meshRoot: TransformNode;
   private cameraRoot: TransformNode;
 
+  public interactor: Mesh;
+  private currentInteractable: Interactable_Base = undefined;
+  private interactables: Interactable_Base[] = [];
+
+  private animationBlend: number = 0;
   private currentAnimation: AnimationGroup;
+  private nextAnimation: AnimationGroup;
   private idle: AnimationGroup;
   private walk: AnimationGroup;
+
+  private wasInteractionPressed: boolean = false;
 
   private deltaTime: number;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     this.input = new InputController(scene);
-
-    this.setupPlayer(scene);
   }
 
   public update(deltaTime: number) {
     this.deltaTime = deltaTime;
 
+    let direction = this.updatePosition(deltaTime);
+
+    this.updateAnimation(direction);
+
+    if (this.input.actionPressed && !this.wasInteractionPressed) {
+      this.wasInteractionPressed = true;
+
+      if (this.interactables.length > 0) {
+        this.currentInteractable = this.interactables[0];
+
+        this.currentInteractable.mesh.parent = this.interactor;
+        this.currentInteractable.mesh.position = Vector3.Zero();
+      }
+    } else if (!this.input.actionPressed && this.wasInteractionPressed) {
+      this.wasInteractionPressed = false;
+
+      if (this.currentInteractable) {
+        let pos = this.currentInteractable.mesh.absolutePosition;
+        this.currentInteractable.mesh.parent = null;
+        this.currentInteractable.mesh.setAbsolutePosition(pos);
+
+        this.currentInteractable = undefined;
+      }
+    }
+  }
+
+  public addInteractable(interactable: Interactable_Base) {
+    this.interactables.push(interactable);
+  }
+
+  public removeInteractable(interactable: Interactable_Base) {
+    this.interactables = this.interactables.filter((i) => i != interactable);
+  }
+
+  private updatePosition(deltaTime: number) {
     let direction = new Vector2(this.input.horizontal, this.input.vertical);
 
     let movement = new Vector3(
@@ -61,11 +103,8 @@ export class Player {
         deltaTime * 10
       );
     }
-
-    this.updateAnimation(direction);
+    return direction;
   }
-  private animationBlend: number = 0;
-  private nextAnimation: AnimationGroup;
 
   private updateAnimation(moveDir: Vector2) {
     let nextAnimation: AnimationGroup = this.idle;
@@ -104,7 +143,7 @@ export class Player {
     }
   }
 
-  private async setupPlayer(scene: Scene) {
+  public async loadPlayer(scene: Scene) {
     this.root = MeshBuilder.CreateCylinder(
       "playerRoot",
       {
@@ -144,6 +183,20 @@ export class Player {
       m.checkCollisions = false;
       m.parent = this.meshRoot;
     });
+
+    this.meshRoot.rotationQuaternion = new Quaternion(0, 1, 0, 0);
+
+    this.interactor = MeshBuilder.CreateBox(
+      "interactorMesh",
+      { size: 1 },
+      scene
+    );
+
+    this.interactor.position = new Vector3(0, 1, 1);
+    this.interactor.checkCollisions = false;
+    this.interactor.isPickable = false;
+    this.interactor.isVisible = false;
+    this.interactor.parent = this.meshRoot;
 
     this.idle = result.animationGroups[1];
     this.walk = result.animationGroups[5];

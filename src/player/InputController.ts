@@ -30,17 +30,17 @@ export class InputController {
   }
 
   private updateKeyboardInput() {
-    if (this.inputMap["w"]) {
+    if (this.inputMap["w"] || this.inputMap["arrowup"]) {
       this.vertical = 1;
-    } else if (this.inputMap["s"]) {
+    } else if (this.inputMap["s"] || this.inputMap["arrowdown"]) {
       this.vertical = -1;
     } else {
       this.vertical = 0;
     }
 
-    if (this.inputMap["a"]) {
+    if (this.inputMap["a"] || this.inputMap["arrowleft"]) {
       this.horizontal = -1;
-    } else if (this.inputMap["d"]) {
+    } else if (this.inputMap["d"] || this.inputMap["arrowright"]) {
       this.horizontal = 1;
     } else {
       this.horizontal = 0;
