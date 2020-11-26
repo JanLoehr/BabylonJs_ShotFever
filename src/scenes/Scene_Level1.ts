@@ -1,5 +1,13 @@
-import { ArcRotateCamera, Engine, HemisphericLight, Mesh, MeshBuilder, Vector3 } from "@babylonjs/core";
-import { subSurfaceScatteringFunctions } from "@babylonjs/core/Shaders/ShadersInclude/subSurfaceScatteringFunctions";
+import {
+  ArcRotateCamera,
+  Engine,
+  HemisphericLight,
+  Mesh,
+  MeshBuilder,
+  SceneLoader,
+  Vector3,
+} from "@babylonjs/core";
+import { Player } from "../player/Player";
 import { Scene_Base } from "./Scene_Base";
 
 export class Scene_Level1 extends Scene_Base {
@@ -9,29 +17,30 @@ export class Scene_Level1 extends Scene_Base {
     this.setupScene();
   }
 
+  public update() {
+    super.update();
+
+    this.player.update(this.deltaTime);
+  }
+
   public render() {
     this.scene.render();
   }
 
-  private setupScene() {
-    var camera: ArcRotateCamera = new ArcRotateCamera(
-      "Camera",
-      Math.PI / 2,
-      Math.PI / 2,
-      2,
-      Vector3.Zero(),
-      this.scene
-    );
-    camera.attachControl(this.canvas, true);
+  private async setupScene() {
+    this.player = new Player(this.scene, this.canvas);
+
     var light1: HemisphericLight = new HemisphericLight(
       "light1",
       new Vector3(1, 1, 0),
       this.scene
     );
-    var sphere: Mesh = MeshBuilder.CreateSphere(
-      "sphere",
-      { diameter: 1 },
-      this.scene
+
+    var levelGeo = await SceneLoader.ImportMeshAsync(
+      "",
+      "./models/",
+      "Level_01.glb"
     );
+    levelGeo.meshes.forEach((m) => (m.checkCollisions = true));
   }
 }

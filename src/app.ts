@@ -1,15 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import {
-  Engine,
-  Scene,
-  ArcRotateCamera,
-  Vector3,
-  HemisphericLight,
-  Mesh,
-  MeshBuilder,
-} from "@babylonjs/core";
+import { Engine } from "@babylonjs/core";
 import { Scene_Level1 } from "./scenes/Scene_Level1";
 
 class App {
@@ -22,7 +14,7 @@ class App {
     // initialize babylon scene and engine
     var engine = new Engine(this.canvas, true);
     var scene = new Scene_Level1(engine, this.canvas);
-    
+
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
       // Shift+Ctrl+Alt+I
@@ -34,8 +26,14 @@ class App {
         }
       }
     });
+
+    window.addEventListener("resize", () => {
+      engine.resize();
+    });
+
     // run the main render loop
     engine.runRenderLoop(() => {
+      scene.update();
       scene.render();
     });
   }
@@ -61,7 +59,7 @@ class App {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     canvas.id = "gameCanvas";
-    
+
     document.body.appendChild(canvas);
 
     return canvas;
