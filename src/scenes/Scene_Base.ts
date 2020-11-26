@@ -15,5 +15,9 @@ export class Scene_Base extends Scene {
     this.scene = new Scene(engine);
   }
 
+  public async loadScene(): Promise<Scene_Base> {
+    return this;
+  }
+
   public render() {}
 }

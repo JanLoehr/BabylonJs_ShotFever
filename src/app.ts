@@ -11,32 +11,38 @@ import {
   MeshBuilder,
 } from "@babylonjs/core";
 import { Scene_Level1 } from "./scenes/Scene_Level1";
+import { SceneKeys, SceneManager } from "./scenes/SceneManager";
 
 class App {
   private canvas: HTMLCanvasElement = undefined;
+  private engine: Engine;
+  private sceneManager: SceneManager;
 
   constructor() {
     // create the canvas html element and attach it to the webpage
     this.canvas = this._createCanvas();
 
     // initialize babylon scene and engine
-    var engine = new Engine(this.canvas, true);
-    var scene = new Scene_Level1(engine, this.canvas);
+    this.engine = new Engine(this.canvas, true);
+    this.sceneManager = new SceneManager(this.engine, this.canvas);
     
-    // hide/show the Inspector
-    window.addEventListener("keydown", (ev) => {
-      // Shift+Ctrl+Alt+I
-      if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === "I") {
-        if (scene.debugLayer.isVisible()) {
-          scene.debugLayer.hide();
-        } else {
-          scene.debugLayer.show();
-        }
-      }
-    });
+    // // hide/show the Inspector
+    // window.addEventListener("keydown", (ev) => {
+    //   // Shift+Ctrl+Alt+I
+    //   if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === "I") {
+    //     if (scene.debugLayer.isVisible()) {
+    //       scene.debugLayer.hide();
+    //     } else {
+    //       scene.debugLayer.show();
+    //     }
+    //   }
+    // });
+
+    this.sceneManager.loadScene(SceneKeys.Scene_One);
+
     // run the main render loop
-    engine.runRenderLoop(() => {
-      scene.render();
+    this.engine.runRenderLoop(() => {
+      this.sceneManager.renderCurrentScene();
     });
   }
 
