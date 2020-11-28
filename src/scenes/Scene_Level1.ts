@@ -17,11 +17,7 @@ export class Scene_Level1 extends Scene_Base {
     super(engine, canvas);
   }
 
-  public update() {
-    super.update();
-
-    this.player.update(this.deltaTime);
-  }
+  protected update(deltaTime: number) {}
 
   public render() {
     this.scene.render();

@@ -5,6 +5,7 @@ export class InputController {
   public vertical: number = 0;
 
   public dashPressed: boolean = false;
+  public pickupPressed: boolean = false;
   public actionPressed: boolean = false;
 
   private inputMap: { [key: string]: boolean } = {};
@@ -46,7 +47,8 @@ export class InputController {
       this.horizontal = 0;
     }
 
-    this.actionPressed = this.inputMap[" "];
+    this.pickupPressed = this.inputMap[" "];
     this.dashPressed = this.inputMap["shift"];
+    this.actionPressed = this.inputMap["control"];
   }
 }

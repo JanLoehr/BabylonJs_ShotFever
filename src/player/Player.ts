@@ -27,6 +27,7 @@ export class Player {
 
   public interactor: Mesh;
   private currentInteractable: Interactable_Base = undefined;
+  private lerpInteractable: number = 0;
   private interactables: Interactable_Base[] = [];
 
   private animationBlend: number = 0;
@@ -35,40 +36,84 @@ export class Player {
   private idle: AnimationGroup;
   private walk: AnimationGroup;
 
-  private wasInteractionPressed: boolean = false;
+  private wasPickupPressed: boolean = false;
+  private wasActionPressed: boolean = false;
 
   private deltaTime: number;
 
   constructor(scene: Scene, canvas: HTMLCanvasElement) {
     this.input = new InputController(scene);
+
+    scene.onBeforeRenderObservable.add(() => {
+      this.update(scene.getEngine().getDeltaTime() / 1000);
+    });
   }
 
-  public update(deltaTime: number) {
+  private update(deltaTime: number) {
     this.deltaTime = deltaTime;
 
     let direction = this.updatePosition(deltaTime);
 
     this.updateAnimation(direction);
 
-    if (this.input.actionPressed && !this.wasInteractionPressed) {
-      this.wasInteractionPressed = true;
+    this.handlePickup();
 
-      if (this.interactables.length > 0) {
+    this.handleAction();
+  }
+
+  private handleAction() {
+    if (this.input.actionPressed && !this.wasActionPressed) {
+      this.wasActionPressed = true;
+
+      if (this.interactables.length > 0 && this.interactables[0].startUse()) {
+        this.currentInteractable = this.interactables[0];
+      }
+    } else if (!this.input.actionPressed && this.wasActionPressed) {
+      this.wasActionPressed = false;
+
+      this.currentInteractable.stopUse();
+      this.currentInteractable = null;
+    }
+  }
+
+  private handlePickup() {
+    if (this.input.pickupPressed && !this.wasPickupPressed) {
+      this.wasPickupPressed = true;
+
+      if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
         this.currentInteractable = this.interactables[0];
 
-        this.currentInteractable.mesh.parent = this.interactor;
-        this.currentInteractable.mesh.position = Vector3.Zero();
+        this.currentInteractable.mesh.setParent(this.interactor);
+
+        this.lerpInteractable = 0;
       }
-    } else if (!this.input.actionPressed && this.wasInteractionPressed) {
-      this.wasInteractionPressed = false;
+    } else if (!this.input.pickupPressed && this.wasPickupPressed) {
+      this.wasPickupPressed = false;
 
       if (this.currentInteractable) {
-        let pos = this.currentInteractable.mesh.absolutePosition;
-        this.currentInteractable.mesh.parent = null;
-        this.currentInteractable.mesh.setAbsolutePosition(pos);
+        this.currentInteractable.mesh.setParent(null);
 
+        this.currentInteractable.drop();
         this.currentInteractable = undefined;
       }
+    }
+
+    if (this.currentInteractable && this.wasPickupPressed && this.lerpInteractable < 1) {
+      this.lerpInteractable += this.deltaTime * 4;
+
+      if (!this.currentInteractable.mesh.rotationQuaternion) {
+        this.currentInteractable.mesh.rotationQuaternion = this.currentInteractable.mesh.rotation.toQuaternion();
+      }
+      this.currentInteractable.mesh.position = Vector3.Lerp(
+        this.currentInteractable.mesh.position,
+        Vector3.Zero(),
+        this.lerpInteractable
+      );
+      this.currentInteractable.mesh.rotationQuaternion = Quaternion.Slerp(
+        this.currentInteractable.mesh.rotationQuaternion,
+        Quaternion.Identity(),
+        this.lerpInteractable
+      );
     }
   }
 
@@ -188,11 +233,12 @@ export class Player {
 
     this.interactor = MeshBuilder.CreateBox(
       "interactorMesh",
-      { size: 1 },
+      { size: 2 },
       scene
     );
 
     this.interactor.position = new Vector3(0, 1, 1);
+    this.interactor.rotationQuaternion = Quaternion.Identity();
     this.interactor.checkCollisions = false;
     this.interactor.isPickable = false;
     this.interactor.isVisible = false;

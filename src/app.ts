@@ -22,7 +22,6 @@ class App {
 
     // run the main render loop
     this.engine.runRenderLoop(() => {
-      this.sceneManager.updateCurrentScene();
       this.sceneManager.renderCurrentScene();
     });
 

@@ -38,10 +38,4 @@ export class SceneManager {
       this.currentScene.render();
     }
   }
-
-  public updateCurrentScene() {
-    if (this.currentScene) {
-      this.currentScene.update();
-    }
-  }
 }

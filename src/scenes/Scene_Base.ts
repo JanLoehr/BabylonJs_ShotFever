@@ -16,15 +16,17 @@ export class Scene_Base extends Scene {
     this.canvas = canvas;
 
     this.scene = new Scene(engine);
+
+    this.scene.onBeforeRenderObservable.add(() => {
+      this.update(engine.getDeltaTime() / 1000);
+    });
   }
 
   public async loadScene(): Promise<Scene_Base> {
     return this;
   }
 
-  public update() {
-    this.deltaTime = this.engine.getDeltaTime() / 1000;
-  }
+  protected update(deltaTime: number) {}
 
   public render() {}
 }
