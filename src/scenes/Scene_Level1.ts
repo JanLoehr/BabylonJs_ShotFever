@@ -49,8 +49,41 @@ export class Scene_Level1 extends Scene_Base {
       }
     });
 
-    let interactable = new Interactable_Base(this.scene, this.player);
-    interactable.mesh.position = new Vector3(-2, 1, 0);
+    let syringe = new Interactable_Base(this.scene, this.player);
+    await syringe.loadAssets("Syringe");
+    syringe.mesh.position = new Vector3(2, 1, 0);
+    syringe.mesh.rotationQuaternion = new Vector3(
+      0,
+      Math.PI / 2,
+      0
+    ).toQuaternion();
+
+    let tablet = new Interactable_Base(this.scene, this.player);
+    await tablet.loadAssets("Tablet");
+    tablet.mesh.position = new Vector3(2, 1, 1);
+    tablet.mesh.rotationQuaternion = new Vector3(
+      0,
+      Math.PI / 2,
+      0
+    ).toQuaternion();
+
+    let vaccine = new Interactable_Base(this.scene, this.player);
+    await vaccine.loadAssets("Vaccine_A");
+    vaccine.mesh.position = new Vector3(2, 1, 2);
+    vaccine.mesh.rotationQuaternion = new Vector3(
+      0,
+      Math.PI / 2,
+      0
+    ).toQuaternion();
+
+    let needle = new Interactable_Base(this.scene, this.player);
+    await needle.loadAssets("Needle");
+    needle.mesh.position = new Vector3(2, 1, -1);
+    needle.mesh.rotationQuaternion = new Vector3(
+      0,
+      Math.PI / 2,
+      0
+    ).toQuaternion();
 
     return this;
   }

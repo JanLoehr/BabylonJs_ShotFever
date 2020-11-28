@@ -6,6 +6,7 @@ const appDirectory = fs.realpathSync(process.cwd());
 module.exports = {
   entry: path.resolve(appDirectory, "src/app.ts"), //path to the main .ts file
   output: {
+    path: "C:/Development/BabylonJs/ShotFever/dist",
     filename: "js/shotfever.js", //name for the js file that is created/compiled in memory
   },
   resolve: {
@@ -29,11 +30,11 @@ module.exports = {
     ],
   },
   plugins: [
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       inject: true,
       template: path.resolve(appDirectory, "public/index.html"),
     }),
-    new CleanWebpackPlugin(),
   ],
   mode: "development",
 };

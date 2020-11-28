@@ -1,14 +1,17 @@
 import {
   Action,
   ActionManager,
+  Color3,
   ExecuteCodeAction,
   Matrix,
   Mesh,
   MeshBuilder,
   PickingInfo,
+  Quaternion,
   Ray,
   RayHelper,
   Scene,
+  SceneLoader,
   Vector2,
   Vector3,
 } from "@babylonjs/core";
@@ -18,6 +21,7 @@ export class Interactable_Base {
   public mesh: Mesh;
 
   private scene: Scene;
+  private player: Player;
 
   private canPickup: boolean = true;
   private pickedUp: boolean = false;
@@ -36,37 +40,10 @@ export class Interactable_Base {
     canPickup: boolean = true,
     canUse: boolean = true
   ) {
-    this.mesh = MeshBuilder.CreateBox("interactable", { size: 0.5 }, scene);
-    this.mesh.bakeTransformIntoVertices(Matrix.Translation(0, 0.25, 0));
     this.scene = scene;
+    this.player = player;
     this.canPickup = canPickup;
     this.canUse = canUse;
-
-    this.mesh.actionManager = new ActionManager(scene);
-
-    this.mesh.actionManager.registerAction(
-      new ExecuteCodeAction(
-        {
-          trigger: ActionManager.OnIntersectionEnterTrigger,
-          parameter: player.interactor,
-        },
-        (e) => {
-          player.addInteractable(this);
-        }
-      )
-    );
-
-    this.mesh.actionManager.registerAction(
-      new ExecuteCodeAction(
-        {
-          trigger: ActionManager.OnIntersectionExitTrigger,
-          parameter: player.interactor,
-        },
-        (e) => {
-          player.removeInteractable(this);
-        }
-      )
-    );
 
     scene.onBeforeRenderObservable.add(() => {
       this.update(this.scene.getEngine().getDeltaTime() / 1000);
@@ -79,6 +56,42 @@ export class Interactable_Base {
     if (this.isUsing) {
       this.mesh.visibility = Math.max(0, 1 - (Date.now() - this.usingStarted));
     }
+  }
+
+  public async loadAssets(meshName: string) {
+    let result = await SceneLoader.ImportMeshAsync(
+      meshName,
+      "./models/",
+      "Props.glb"
+    );
+
+    this.mesh = result.meshes.find((m) => m.name === meshName) as Mesh;
+    console.log(this.mesh);
+    this.mesh.actionManager = new ActionManager(this.scene);
+
+    this.mesh.actionManager.registerAction(
+      new ExecuteCodeAction(
+        {
+          trigger: ActionManager.OnIntersectionEnterTrigger,
+          parameter: this.player.interactor,
+        },
+        (e) => {
+          this.player.addInteractable(this);
+        }
+      )
+    );
+
+    this.mesh.actionManager.registerAction(
+      new ExecuteCodeAction(
+        {
+          trigger: ActionManager.OnIntersectionExitTrigger,
+          parameter: this.player.interactor,
+        },
+        (e) => {
+          this.player.removeInteractable(this);
+        }
+      )
+    );
   }
 
   public pickUp(): boolean {
@@ -125,6 +138,12 @@ export class Interactable_Base {
   }
 
   private handlePickup(deltaTime: number) {
+    if (!this.moveSpeed.equals(Vector3.Zero())) {
+      this.mesh.position = this.mesh.position.add(
+        this.moveSpeed.scale(deltaTime)
+      );
+    }
+
     if (!this.pickedUp) {
       if (!this.grounded) {
         let pick = this.checkIsGrounded();
@@ -132,10 +151,6 @@ export class Interactable_Base {
 
         if (!this.grounded) {
           this.moveSpeed.y = this.moveSpeed.y - this.gravity;
-
-          this.mesh.position = this.mesh.position.add(
-            this.moveSpeed.scale(deltaTime)
-          );
         } else {
           this.mesh.position = pick.pickedPoint;
 
@@ -154,7 +169,7 @@ export class Interactable_Base {
 
     let pick = this.scene.pickWithRay(
       ray,
-      (m) => m.isPickable && m.isVisible && m.name != "interactable"
+      (m) => m.isPickable && m.isVisible && m != this.mesh
     );
 
     return pick;

@@ -68,7 +68,11 @@ export class Player {
       if (this.interactables.length > 0 && this.interactables[0].startUse()) {
         this.currentInteractable = this.interactables[0];
       }
-    } else if (!this.input.actionPressed && this.wasActionPressed) {
+    } else if (
+      this.currentInteractable &&
+      !this.input.actionPressed &&
+      this.wasActionPressed
+    ) {
       this.wasActionPressed = false;
 
       this.currentInteractable.stopUse();
@@ -98,7 +102,11 @@ export class Player {
       }
     }
 
-    if (this.currentInteractable && this.wasPickupPressed && this.lerpInteractable < 1) {
+    if (
+      this.currentInteractable &&
+      this.wasPickupPressed &&
+      this.lerpInteractable < 1
+    ) {
       this.lerpInteractable += this.deltaTime * 4;
 
       if (!this.currentInteractable.mesh.rotationQuaternion) {
@@ -233,12 +241,16 @@ export class Player {
 
     this.interactor = MeshBuilder.CreateBox(
       "interactorMesh",
-      { size: 2 },
+      { width: 1, depth: 1, height: 3 },
       scene
     );
 
     this.interactor.position = new Vector3(0, 1, 1);
-    this.interactor.rotationQuaternion = Quaternion.Identity();
+    this.interactor.rotationQuaternion = new Vector3(
+      0,
+      0,
+      Math.PI
+    ).toQuaternion();
     this.interactor.checkCollisions = false;
     this.interactor.isPickable = false;
     this.interactor.isVisible = false;
