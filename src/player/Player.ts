@@ -19,6 +19,7 @@ export class Player {
   private PLAYER_SPEED: number = 5;
 
   private input: InputController;
+  private moveDir: Vector2;
 
   private camera: Camera;
   private root: Mesh;
@@ -52,9 +53,9 @@ export class Player {
   private update(deltaTime: number) {
     this.deltaTime = deltaTime;
 
-    let direction = this.updatePosition(deltaTime);
+    this.moveDir = this.updatePosition(deltaTime);
 
-    this.updateAnimation(direction);
+    this.updateAnimation(this.moveDir);
 
     this.handlePickup();
 
@@ -62,16 +63,23 @@ export class Player {
   }
 
   private handleAction() {
-    if (this.input.actionPressed && !this.wasActionPressed) {
-      this.wasActionPressed = true;
-
+    if (
+      this.input.actionPressed &&
+      !this.wasActionPressed &&
+      this.moveDir.equals(Vector2.Zero())
+    ) {
       if (this.interactables.length > 0 && this.interactables[0].startUse()) {
+        this.wasActionPressed = true;
+
         this.currentInteractable = this.interactables[0];
       }
     } else if (
-      this.currentInteractable &&
-      !this.input.actionPressed &&
-      this.wasActionPressed
+      (this.currentInteractable && // ActionKey Released
+        !this.input.actionPressed &&
+        this.wasActionPressed) ||
+      (this.currentInteractable && // Moved while Actioning
+        this.wasActionPressed &&
+        !this.moveDir.equals(Vector2.Zero()))
     ) {
       this.wasActionPressed = false;
 
@@ -82,11 +90,10 @@ export class Player {
 
   private handlePickup() {
     if (this.input.pickupPressed && !this.wasPickupPressed) {
-      this.wasPickupPressed = true;
-
       if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
-        this.currentInteractable = this.interactables[0];
+        this.wasPickupPressed = true;
 
+        this.currentInteractable = this.interactables[0];
         this.currentInteractable.mesh.setParent(this.interactor);
 
         this.lerpInteractable = 0;

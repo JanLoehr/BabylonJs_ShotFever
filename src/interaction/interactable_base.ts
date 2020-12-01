@@ -1,33 +1,27 @@
 import {
-  Action,
   ActionManager,
-  Color3,
   ExecuteCodeAction,
-  Matrix,
   Mesh,
-  MeshBuilder,
   PickingInfo,
-  Quaternion,
   Ray,
-  RayHelper,
   Scene,
   SceneLoader,
-  Vector2,
   Vector3,
 } from "@babylonjs/core";
 import { Player } from "../player/Player";
+import { CustomMesh } from "../utils/CusomMesh";
 
 export class Interactable_Base {
-  public mesh: Mesh;
+  public mesh: CustomMesh;
 
-  private scene: Scene;
-  private player: Player;
+  protected scene: Scene;
+  protected player: Player;
 
-  private canPickup: boolean = true;
+  protected canPickup: boolean = true;
   private pickedUp: boolean = false;
   private grounded: boolean = true;
 
-  private canUse: boolean = true;
+  protected canUse: boolean = true;
   private isUsing: boolean = false;
   private usingStarted: number = 0;
 
@@ -37,6 +31,7 @@ export class Interactable_Base {
   constructor(
     scene: Scene,
     player: Player,
+    mesh: Mesh = null,
     canPickup: boolean = true,
     canUse: boolean = true
   ) {
@@ -44,6 +39,11 @@ export class Interactable_Base {
     this.player = player;
     this.canPickup = canPickup;
     this.canUse = canUse;
+
+    if (mesh) {
+      this.mesh = new CustomMesh(mesh);
+      this.registerActions();
+    }
 
     scene.onBeforeRenderObservable.add(() => {
       this.update(this.scene.getEngine().getDeltaTime() / 1000);
@@ -65,8 +65,15 @@ export class Interactable_Base {
       "Props.glb"
     );
 
-    this.mesh = result.meshes.find((m) => m.name === meshName) as Mesh;
-    console.log(this.mesh);
+    let mesh = result.meshes.find((m) => m.name === meshName) as Mesh;
+    this.mesh = new CustomMesh(mesh);
+
+    mesh.isVisible = false;
+
+    this.registerActions();
+  }
+
+  private registerActions() {
     this.mesh.actionManager = new ActionManager(this.scene);
 
     this.mesh.actionManager.registerAction(
@@ -75,8 +82,8 @@ export class Interactable_Base {
           trigger: ActionManager.OnIntersectionEnterTrigger,
           parameter: this.player.interactor,
         },
-        (e) => {
-          this.player.addInteractable(this);
+        () => {
+          this.addtoPlayerInteractables();
         }
       )
     );
@@ -87,8 +94,8 @@ export class Interactable_Base {
           trigger: ActionManager.OnIntersectionExitTrigger,
           parameter: this.player.interactor,
         },
-        (e) => {
-          this.player.removeInteractable(this);
+        () => {
+          this.removefromPlayerInteractables();
         }
       )
     );
@@ -137,6 +144,18 @@ export class Interactable_Base {
     return false;
   }
 
+  protected addtoPlayerInteractables() {
+    if (this.mesh.isPickable) {
+      this.player.addInteractable(this);
+    }
+  }
+
+  protected removefromPlayerInteractables() {
+    if (this.mesh.isPickable) {
+      this.player.removeInteractable(this);
+    }
+  }
+
   private handlePickup(deltaTime: number) {
     if (!this.moveSpeed.equals(Vector3.Zero())) {
       this.mesh.position = this.mesh.position.add(
@@ -152,12 +171,16 @@ export class Interactable_Base {
         if (!this.grounded) {
           this.moveSpeed.y = this.moveSpeed.y - this.gravity;
         } else {
-          this.mesh.position = pick.pickedPoint;
-
           this.moveSpeed = Vector3.Zero();
+
+          this.landItem(pick);
         }
       }
     }
+  }
+
+  protected landItem(pick: PickingInfo) {
+    this.mesh.position = pick.pickedPoint;
   }
 
   private checkIsGrounded(): PickingInfo {

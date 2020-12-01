@@ -9,7 +9,12 @@ import {
 } from "@babylonjs/core";
 import { subSurfaceScatteringFunctions } from "@babylonjs/core/Shaders/ShadersInclude/subSurfaceScatteringFunctions";
 import { Interactable_Base } from "../interaction/interactable_base";
+import { Needle } from "../interaction/Needle";
+import { Syringe } from "../interaction/Syringe";
+import { Tablet } from "../interaction/Tablet";
+import { Vaccine } from "../interaction/Vaccine";
 import { Player } from "../player/Player";
+import { MeshTypes } from "../utils/MeshInstancer";
 import { Scene_Base } from "./Scene_Base";
 
 export class Scene_Level1 extends Scene_Base {
@@ -39,7 +44,7 @@ export class Scene_Level1 extends Scene_Base {
       "Level_01.glb"
     );
 
-    levelGeo.meshes.forEach((m) => {
+    levelGeo.meshes.forEach(async (m) => {
       if (m.name.includes("Collision")) {
         m.checkCollisions = true;
       }
@@ -47,44 +52,20 @@ export class Scene_Level1 extends Scene_Base {
       if (m.name.includes("Invisible")) {
         m.isVisible = false;
       }
+
+      if (m.name.includes("Spawner_")) {
+        let meshType = MeshTypes[m.name.split("_")[1]];
+
+        let mesh = await this.meshInstancer.getMeshInstance(meshType);
+
+        mesh.setParent(m);
+        mesh.position = new Vector3(0, 1, 0);
+      }
     });
-
-    let syringe = new Interactable_Base(this.scene, this.player);
-    await syringe.loadAssets("Syringe");
-    syringe.mesh.position = new Vector3(2, 1, 0);
-    syringe.mesh.rotationQuaternion = new Vector3(
-      0,
-      Math.PI / 2,
-      0
-    ).toQuaternion();
-
-    let tablet = new Interactable_Base(this.scene, this.player);
-    await tablet.loadAssets("Tablet");
-    tablet.mesh.position = new Vector3(2, 1, 1);
-    tablet.mesh.rotationQuaternion = new Vector3(
-      0,
-      Math.PI / 2,
-      0
-    ).toQuaternion();
-
-    let vaccine = new Interactable_Base(this.scene, this.player);
-    await vaccine.loadAssets("Vaccine_A");
-    vaccine.mesh.position = new Vector3(2, 1, 2);
-    vaccine.mesh.rotationQuaternion = new Vector3(
-      0,
-      Math.PI / 2,
-      0
-    ).toQuaternion();
-
-    let needle = new Interactable_Base(this.scene, this.player);
-    await needle.loadAssets("Needle");
-    needle.mesh.position = new Vector3(2, 1, -1);
-    needle.mesh.rotationQuaternion = new Vector3(
-      0,
-      Math.PI / 2,
-      0
-    ).toQuaternion();
-
+    
+    let mesh = await this.meshInstancer.getMeshInstance(MeshTypes.Tablet);
+    mesh.setParent(null);
+    mesh.position = new Vector3(0, 3, 0);
     return this;
   }
 }

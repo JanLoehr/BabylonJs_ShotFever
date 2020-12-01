@@ -1,5 +1,6 @@
 import { Engine, Scene } from "@babylonjs/core";
 import { Player } from "../player/Player";
+import { MeshInstancer } from "../utils/MeshInstancer";
 
 export class Scene_Base extends Scene {
   protected engine: Engine;
@@ -9,11 +10,15 @@ export class Scene_Base extends Scene {
 
   protected player: Player;
 
+  protected meshInstancer: MeshInstancer;
+
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     super(engine);
 
     this.engine = engine;
     this.canvas = canvas;
+
+    this.meshInstancer = new MeshInstancer(this);
 
     this.scene = new Scene(engine);
 
