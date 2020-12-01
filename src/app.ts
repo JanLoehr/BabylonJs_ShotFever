@@ -1,8 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { DebugLayer, Engine, Scene } from "@babylonjs/core";
-import { Scene_Level1 } from "./scenes/Scene_Level1";
+import { Engine } from "@babylonjs/core";
 import { SceneKeys, SceneManager } from "./scenes/SceneManager";
 
 class App {

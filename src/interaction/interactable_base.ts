@@ -1,6 +1,7 @@
 import {
   ActionManager,
   ExecuteCodeAction,
+  InstancedMesh,
   Mesh,
   PickingInfo,
   Ray,
@@ -8,8 +9,11 @@ import {
   SceneLoader,
   Vector3,
 } from "@babylonjs/core";
+import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
 import { Player } from "../player/Player";
-import { CustomMesh } from "../utils/CusomMesh";
+import { Scene_Base } from "../scenes/Scene_Base";
+import { CustomMesh } from "../utils/CustomMesh";
+import { MeshTypes } from "../utils/MeshInstancer";
 
 export class Interactable_Base {
   public mesh: CustomMesh;
@@ -17,9 +21,12 @@ export class Interactable_Base {
   protected scene: Scene;
   protected player: Player;
 
+  public canDrop = false;
+
   protected canPickup: boolean = true;
   private pickedUp: boolean = false;
   private grounded: boolean = true;
+  public onPickup = new SignalDispatcher();
 
   protected canUse: boolean = true;
   private isUsing: boolean = false;
@@ -41,7 +48,7 @@ export class Interactable_Base {
     this.canUse = canUse;
 
     if (mesh) {
-      this.mesh = new CustomMesh(mesh);
+      this.mesh = new CustomMesh(mesh, scene);
       this.registerActions();
     }
 
@@ -54,19 +61,12 @@ export class Interactable_Base {
     this.handlePickup(deltaTime);
 
     if (this.isUsing) {
-      this.mesh.visibility = Math.max(0, 1 - (Date.now() - this.usingStarted));
     }
   }
 
-  public async loadAssets(meshName: string) {
-    let result = await SceneLoader.ImportMeshAsync(
-      meshName,
-      "./models/",
-      "Props.glb"
-    );
-
-    let mesh = result.meshes.find((m) => m.name === meshName) as Mesh;
-    this.mesh = new CustomMesh(mesh);
+  public async loadAssets(meshType: MeshTypes) {
+    let mesh = await (this.scene as Scene_Base).meshInstancer.getMeshInstance(meshType);
+    this.mesh = new CustomMesh(mesh, this.scene);
 
     mesh.isVisible = false;
 
@@ -105,6 +105,7 @@ export class Interactable_Base {
     if (this.canPickup && !this.isUsing) {
       this.pickedUp = true;
 
+      this.onPickup.dispatch();
       return true;
     }
 
@@ -136,7 +137,7 @@ export class Interactable_Base {
   public stopUse(): boolean {
     if (this.canUse && !this.pickedUp) {
       this.isUsing = false;
-      this.mesh.visibility = 1;
+      // this.mesh.visibility = 1;
 
       return true;
     }

@@ -1,10 +1,13 @@
 import { Mesh, Quaternion, Scene, SceneLoader, TransformNode, Vector3 } from "@babylonjs/core";
 import { Player } from "../player/Player";
+import { MeshTypes } from "../utils/MeshInstancer";
 import { Interactable_Base } from "./interactable_base";
 
 export class Tablet extends Interactable_Base {
   constructor(scene: Scene, player: Player, mesh?: Mesh) {
     super(scene, player, mesh, true, false);
+
+    this.canDrop = true;
 
     this.mesh.onPick.subscribe((msg) => {
       this.onPick(msg);
@@ -25,7 +28,7 @@ export class Tablet extends Interactable_Base {
     anchor.getChildMeshes().forEach((m) => m.dispose());
 
     let needle = new Interactable_Base(this.scene, this.player, null, false, false);
-    await needle.loadAssets("Syringe_Needle");
+    await needle.loadAssets(MeshTypes.Syringe_Needle);
 
     needle.mesh.setParent(anchor);
     needle.mesh.position = Vector3.Zero();

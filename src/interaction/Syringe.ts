@@ -1,17 +1,15 @@
-import {
-  Mesh,
-  PickingInfo,
-  Quaternion,
-  SceneLoader,
-  Vector3,
-} from "@babylonjs/core";
-import { CustomMesh } from "../utils/CusomMesh";
+import { Mesh, PickingInfo, Quaternion, Scene, Vector3 } from "@babylonjs/core";
+import { Player } from "../player/Player";
+import { CustomMesh } from "../utils/CustomMesh";
 import { Interactable_Base } from "./interactable_base";
 
 export class Syringe extends Interactable_Base {
+  constructor(scene: Scene, player: Player, mesh?: Mesh) {
+    super(scene, player, mesh, true, false);
+  }
+
   protected async landItem(pick: PickingInfo) {
     if (pick.pickedMesh.name.includes("Tablet")) {
-      console.log(pick.pickedMesh);
       let anchor = pick.pickedMesh
         .getChildTransformNodes()
         .find((n) => n.name.includes("Anchor_Needle"));

@@ -235,7 +235,8 @@ export class Player {
     var result = await SceneLoader.ImportMeshAsync(
       "",
       "./models/",
-      "Robot.glb"
+      "Robot.glb",
+      scene
     );
 
     result.meshes.forEach((m) => {

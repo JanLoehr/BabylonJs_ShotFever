@@ -6,32 +6,26 @@ export class Scene_Base extends Scene {
   protected engine: Engine;
   protected canvas: HTMLCanvasElement;
 
-  protected scene: Scene;
+  public player: Player;
 
-  protected player: Player;
-
-  protected meshInstancer: MeshInstancer;
+  public meshInstancer: MeshInstancer;
 
   constructor(engine: Engine, canvas: HTMLCanvasElement) {
     super(engine);
 
     this.engine = engine;
     this.canvas = canvas;
-
-    this.meshInstancer = new MeshInstancer(this);
-
-    this.scene = new Scene(engine);
-
-    this.scene.onBeforeRenderObservable.add(() => {
-      this.update(engine.getDeltaTime() / 1000);
-    });
   }
 
   public async loadScene(): Promise<Scene_Base> {
     return this;
   }
 
-  protected update(deltaTime: number) {}
+  public update(deltaTime: number) {}
 
-  public render() {}
+  public render() {
+    super.render();
+  }
+
+  public unload() {}
 }
