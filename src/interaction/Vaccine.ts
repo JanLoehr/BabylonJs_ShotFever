@@ -1,4 +1,5 @@
 import {
+  InstancedMesh,
   Mesh,
   PickingInfo,
   Quaternion,
@@ -6,14 +7,14 @@ import {
   TransformNode,
   Vector3,
 } from "@babylonjs/core";
+import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Player } from "../player/Player";
-import { CustomMesh } from "../utils/CustomMesh";
 import { Interactable_Base } from "./interactable_base";
 
 export class Vaccine extends Interactable_Base {
   public needleSocket: TransformNode;
 
-  constructor(scene: Scene, player: Player, mesh?: Mesh) {
+  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
     super(scene, player, mesh, true, false);
 
     this.needleSocket = mesh
@@ -23,7 +24,7 @@ export class Vaccine extends Interactable_Base {
 
   protected landItem(pick: PickingInfo) {
     if (pick.pickedMesh.name.includes("Tablet")) {
-      (pick.pickedMesh as CustomMesh).onPick.dispatch(this, "Vaccine");
+      (pick.pickedMesh.getBehaviorByName("onPickBehavior") as OnPickBehavior).onPick.dispatch(this, "Vaccine");
     } else {
       super.landItem(pick);
     }

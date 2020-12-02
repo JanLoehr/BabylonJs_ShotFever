@@ -1,12 +1,20 @@
 import {
+  BouncingBehavior,
+  FadeInOutBehavior,
+  InstancedMesh,
   Mesh,
+  MeshBuilder,
   Quaternion,
   Scene,
   SceneLoader,
   TransformNode,
   Vector3,
 } from "@babylonjs/core";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Player } from "../player/Player";
+import { Scene_Base } from "../scenes/Scene_Base";
+import { ProgressBar } from "../ui/ProgressBar";
 import { MeshTypes } from "../utils/MeshInstancer";
 import { Interactable_Base } from "./interactable_base";
 import { Needle } from "./Needle";
@@ -27,14 +35,19 @@ export class Tablet extends Interactable_Base {
   private syringeFinished: boolean = false;
   private vaccineSet: boolean = false;
 
-  constructor(scene: Scene, player: Player, mesh?: Mesh) {
+  private guiPlane: Mesh;
+  private progressBar: ProgressBar;
+  private guiTexture: AdvancedDynamicTexture;
+
+  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
     super(scene, player, mesh, true, false);
 
-    this.canDrop = true;
-
-    this.mesh.onPick.subscribe((sender, args) => {
+    let onPickBehavior = new OnPickBehavior();
+    onPickBehavior.onPick.subscribe((sender, args) => {
       this.onPick(sender, args);
     });
+
+    this.mesh.addBehavior(onPickBehavior);
 
     this.needleAnchor = this.mesh
       .getChildTransformNodes()
@@ -48,7 +61,18 @@ export class Tablet extends Interactable_Base {
   protected update(deltaTime: number) {
     super.update(deltaTime);
 
-    if (this.isUsing) {
+    if (this.isUsing && this.progressBar) {
+      let seconds = 2;
+      let value = (Date.now() - this.usingStarted) / 1000 / seconds;
+      this.progressBar.setValue(value);
+
+      if (value > 1) {
+        this.guiPlane.dispose();
+        this.guiTexture.dispose();
+        this.progressBar = null;
+
+        this.switchToSyringeNeedle();
+      }
     }
   }
 
@@ -59,10 +83,29 @@ export class Tablet extends Interactable_Base {
       this.finishedSyringe.mesh.setParent(this.droppedVaccine.needleSocket);
       this.finishedSyringe.mesh.position = Vector3.Zero();
       this.finishedSyringe.mesh.rotationQuaternion = Quaternion.Identity();
-      console.log(this.finishedSyringe);
+
+      let plane = MeshBuilder.CreatePlane("ProgressGUI", {});
+      plane.setParent(this.mesh);
+      plane.position = new Vector3(0, 1.5, 0);
+
+      this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+
+      this.progressBar = new ProgressBar(this.guiTexture);
+
+      this.guiPlane = plane;
     }
 
     return using;
+  }
+
+  public stopUse(): boolean {
+    let stopped = super.stopUse();
+
+    if (stopped) {
+      this.guiPlane.dispose();
+      this.guiTexture.dispose();
+    }
+    return stopped;
   }
 
   private onPick(sender: any, args: any) {
@@ -79,7 +122,7 @@ export class Tablet extends Interactable_Base {
     } else if (args === "Vaccine" && !this.vaccineSet) {
       this.droppedVaccine = sender as Vaccine;
       this.droppedVaccine.setSocket(this.vaccineAnchor);
-      
+
       this.vaccineSet = true;
     }
 
@@ -88,6 +131,27 @@ export class Tablet extends Interactable_Base {
 
       this.addFinishedSyringe();
     }
+
+    if (this.syringeFinished && this.vaccineSet) {
+      this.canUse = true;
+    }
+  }
+
+  private async switchToSyringeNeedle() {
+    let syringe = new Interactable_Base(
+      this.scene,
+      this.player,
+      null,
+      true,
+      false
+    );
+    await syringe.loadAssets(MeshTypes.Syringe_Needle);
+    syringe.mesh.setParent(null);
+    syringe.mesh.position = this.mesh.position;
+    
+
+    this.removefromPlayerInteractables();
+    this.mesh.dispose();
   }
 
   private async addFinishedSyringe() {
@@ -106,7 +170,5 @@ export class Tablet extends Interactable_Base {
     this.finishedSyringe.mesh.setParent(this.needleAnchor);
     this.finishedSyringe.mesh.position = Vector3.Zero();
     this.finishedSyringe.mesh.rotationQuaternion = Quaternion.Identity();
-
-    this.canUse = true;
   }
 }

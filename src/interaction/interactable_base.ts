@@ -13,16 +13,13 @@ import {
 import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
 import { Player } from "../player/Player";
 import { Scene_Base } from "../scenes/Scene_Base";
-import { CustomMesh } from "../utils/CustomMesh";
 import { MeshTypes } from "../utils/MeshInstancer";
 
 export class Interactable_Base {
-  public mesh: CustomMesh;
+  public mesh: InstancedMesh;
 
   protected scene: Scene;
   protected player: Player;
-
-  public canDrop = false;
 
   protected canPickup: boolean = true;
   private pickedUp: boolean = false;
@@ -39,7 +36,7 @@ export class Interactable_Base {
   constructor(
     scene: Scene,
     player: Player,
-    mesh: Mesh = null,
+    mesh: InstancedMesh = null,
     canPickup: boolean = true,
     canUse: boolean = true
   ) {
@@ -49,7 +46,7 @@ export class Interactable_Base {
     this.canUse = canUse;
 
     if (mesh) {
-      this.mesh = new CustomMesh(mesh, scene);
+      this.mesh = mesh;
       this.registerActions();
     }
 
@@ -63,10 +60,9 @@ export class Interactable_Base {
   }
 
   public async loadAssets(meshType: MeshTypes) {
-    let mesh = await (this.scene as Scene_Base).meshInstancer.getMeshInstance(meshType);
-    this.mesh = new CustomMesh(mesh, this.scene);
-
-    mesh.isVisible = false;
+    this.mesh = await (this.scene as Scene_Base).meshInstancer.getMeshInstance(
+      meshType
+    );
 
     this.registerActions();
   }
@@ -135,7 +131,6 @@ export class Interactable_Base {
   public stopUse(): boolean {
     if (this.canUse && !this.pickedUp) {
       this.isUsing = false;
-      // this.mesh.visibility = 1;
 
       return true;
     }
@@ -143,12 +138,10 @@ export class Interactable_Base {
     return false;
   }
 
-  public setSocket(node: TransformNode){
-
-  }
+  public setSocket(node: TransformNode) {}
 
   protected addtoPlayerInteractables() {
-    if (this.mesh.isPickable) {
+    if (this.mesh.isPickable && (this.canUse || this.canPickup)) {
       this.player.addInteractable(this);
     }
   }

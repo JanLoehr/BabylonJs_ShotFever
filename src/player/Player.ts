@@ -90,6 +90,7 @@ export class Player {
 
   private handlePickup() {
     if (this.input.pickupPressed && !this.wasPickupPressed) {
+      console.log(this.interactables);
       if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
         this.wasPickupPressed = true;
 

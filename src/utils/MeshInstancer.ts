@@ -1,4 +1,4 @@
-import { Mesh, SceneLoader } from "@babylonjs/core";
+import { InstancedMesh, Mesh, SceneLoader } from "@babylonjs/core";
 
 export enum MeshTypes {
   Syringe,
@@ -15,10 +15,10 @@ export class MeshInstancer {
     this.loadProps(filePath, fileName);
   }
 
-  public async getMeshInstance(meshType: MeshTypes): Promise<Mesh> {
+  public async getMeshInstance(meshType: MeshTypes): Promise<InstancedMesh> {
     let mesh = this.meshes.find((m) => m.name.includes(MeshTypes[meshType]));
 
-    return mesh;
+    return mesh.instantiateHierarchy() as InstancedMesh;
   }
 
   private async loadProps(filePath: string, fileName: string) {

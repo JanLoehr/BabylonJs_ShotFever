@@ -1,4 +1,4 @@
-import { Mesh, Vector3 } from "@babylonjs/core";
+import { InstancedMesh, Mesh, Vector3 } from "@babylonjs/core";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { MeshInstancer, MeshTypes } from "../utils/MeshInstancer";
 import { Interactable_Base } from "./interactable_base";
@@ -25,7 +25,7 @@ export class PropSpawner {
   private async spawnProp() {
     let mesh = (await this.scene.meshInstancer.getMeshInstance(
       this.propType
-    )) as Mesh;
+    )) as InstancedMesh;
 
     let interacteble: Interactable_Base;
 

@@ -1,16 +1,16 @@
-import { Mesh, PickingInfo, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { InstancedMesh, Mesh, PickingInfo, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Player } from "../player/Player";
-import { CustomMesh } from "../utils/CustomMesh";
 import { Interactable_Base } from "./interactable_base";
 
 export class Needle extends Interactable_Base {
-  constructor(scene: Scene, player: Player, mesh?: Mesh) {
+  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
     super(scene, player, mesh, true, false);
   }
 
   protected async landItem(pick: PickingInfo) {
     if (pick.pickedMesh.name.includes("Tablet")) {
-      (pick.pickedMesh as CustomMesh).onPick.dispatch(this, "Needle");
+      (pick.pickedMesh.getBehaviorByName("onPickBehavior") as OnPickBehavior).onPick.dispatch(this, "Needle");
     } else {
       super.landItem(pick);
     }
