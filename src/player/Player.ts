@@ -69,7 +69,7 @@ export class Player {
       this.moveDir.equals(Vector2.Zero())
     ) {
       if (this.interactables.length > 0 && this.interactables[0].startUse()) {
-        this.wasActionPressed = true;
+         this.wasActionPressed = true;
 
         this.currentInteractable = this.interactables[0];
       }

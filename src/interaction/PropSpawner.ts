@@ -55,7 +55,6 @@ export class PropSpawner {
   }
 
   private onPickupProp() {
-    console.log("one");
     this.currentInteractable = null;
 
     setTimeout(() => this.spawnProp(), 5000);

@@ -1,16 +1,11 @@
-import {
-  Mesh,
-  SceneLoader,
-  TransformNode,
-} from "@babylonjs/core";
-
+import { Mesh, SceneLoader } from "@babylonjs/core";
 
 export enum MeshTypes {
   Syringe,
   Needle,
   Tablet,
   VaccineA,
-  Syringe_Needle
+  Syringe_Needle,
 }
 
 export class MeshInstancer {

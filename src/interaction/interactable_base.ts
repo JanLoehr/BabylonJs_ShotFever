@@ -7,6 +7,7 @@ import {
   Ray,
   Scene,
   SceneLoader,
+  TransformNode,
   Vector3,
 } from "@babylonjs/core";
 import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
@@ -29,8 +30,8 @@ export class Interactable_Base {
   public onPickup = new SignalDispatcher();
 
   protected canUse: boolean = true;
-  private isUsing: boolean = false;
-  private usingStarted: number = 0;
+  protected isUsing: boolean = false;
+  protected usingStarted: number = 0;
 
   private moveSpeed: Vector3 = Vector3.Zero();
   private gravity: number = 1;
@@ -57,11 +58,8 @@ export class Interactable_Base {
     });
   }
 
-  private update(deltaTime: number) {
+  protected update(deltaTime: number) {
     this.handlePickup(deltaTime);
-
-    if (this.isUsing) {
-    }
   }
 
   public async loadAssets(meshType: MeshTypes) {
@@ -143,6 +141,10 @@ export class Interactable_Base {
     }
 
     return false;
+  }
+
+  public setSocket(node: TransformNode){
+
   }
 
   protected addtoPlayerInteractables() {
