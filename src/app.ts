@@ -3,11 +3,13 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Engine } from "@babylonjs/core";
 import { SceneKeys, SceneManager } from "./scenes/SceneManager";
+import { NetworkManager } from "./networking/NetworkManager";
 
 class App {
   private canvas: HTMLCanvasElement = undefined;
   private engine: Engine;
   private sceneManager: SceneManager;
+  private networkManager: NetworkManager;
 
   constructor() {
     // create the canvas html element and attach it to the webpage
@@ -15,9 +17,16 @@ class App {
 
     // initialize babylon scene and engine
     this.engine = new Engine(this.canvas, true);
-    this.sceneManager = new SceneManager(this.engine, this.canvas);
 
-    this.sceneManager.loadScene(SceneKeys.Scene_One);
+    this.networkManager = new NetworkManager();
+
+    this.sceneManager = new SceneManager(
+      this.engine,
+      this.networkManager,
+      this.canvas
+    );
+
+    this.sceneManager.loadScene(SceneKeys.Menu);
 
     // run the main render loop
     this.engine.runRenderLoop(() => {

@@ -6,6 +6,7 @@
     "noImplicitAny": false,
     "sourceMap": true,
     "preserveConstEnums":true,
+    "esModuleInterop": true,
     "lib": [
         "dom",
         "es6"

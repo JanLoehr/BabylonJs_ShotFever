@@ -1,6 +1,8 @@
 import { Engine, Scene } from "@babylonjs/core";
+import { NetworkManager } from "../networking/NetworkManager";
 import { Scene_Base } from "./Scene_Base";
 import { Scene_Level1 } from "./Scene_Level1";
+import { Scene_Menu } from "./Scene_Menu";
 
 export enum SceneKeys {
   Menu,
@@ -13,11 +15,23 @@ export class SceneManager {
 
   private currentScene: Scene_Base;
 
-  constructor(engine: Engine, canvas: HTMLCanvasElement) {
+  constructor(
+    engine: Engine,
+    networkManager: NetworkManager,
+    canvas: HTMLCanvasElement
+  ) {
     this.engine = engine;
 
-    // this.scenes[SceneKeys.Menu] = new Scene_Base(engine, canvas);
-    this.scenes[SceneKeys.Scene_One] = new Scene_Level1(engine, canvas);
+    this.scenes[SceneKeys.Menu] = new Scene_Menu(
+      engine,
+      networkManager,
+      canvas
+    );
+    this.scenes[SceneKeys.Scene_One] = new Scene_Level1(
+      engine,
+      networkManager,
+      canvas
+    );
 
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {

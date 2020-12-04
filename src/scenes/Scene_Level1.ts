@@ -6,13 +6,18 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { PropSpawner } from "../interaction/PropSpawner";
+import { NetworkManager } from "../networking/NetworkManager";
 import { Player } from "../player/Player";
 import { MeshInstancer, MeshTypes } from "../utils/MeshInstancer";
 import { Scene_Base } from "./Scene_Base";
 
 export class Scene_Level1 extends Scene_Base {
-  constructor(engine: Engine, canvas: HTMLCanvasElement) {
-    super(engine, canvas);
+  constructor(
+    engine: Engine,
+    networkManager: NetworkManager,
+    canvas: HTMLCanvasElement
+  ) {
+    super(engine, networkManager, canvas);
 
     this.meshInstancer = new MeshInstancer("./models/", "Props.glb");
   }
