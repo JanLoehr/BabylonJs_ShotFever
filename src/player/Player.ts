@@ -18,6 +18,10 @@ import { InputController } from "./InputController";
 export class Player {
   private PLAYER_SPEED: number = 5;
 
+  private isLocalPlayer: boolean;
+  private networkId: string;
+  private name: string;
+
   private input: InputController;
   private moveDir: Vector2;
 
@@ -42,8 +46,17 @@ export class Player {
 
   private deltaTime: number;
 
-  constructor(scene: Scene, canvas: HTMLCanvasElement) {
+  constructor(
+    scene: Scene,
+    canvas: HTMLCanvasElement,
+    isLocalPlayer: boolean,
+    networkId: string,
+    name: string
+  ) {
     this.input = new InputController(scene);
+    this.isLocalPlayer = isLocalPlayer;
+    this.networkId = networkId;
+    this.name = name;
 
     scene.onBeforeRenderObservable.add(() => {
       this.update(scene.getEngine().getDeltaTime() / 1000);
@@ -53,13 +66,19 @@ export class Player {
   private update(deltaTime: number) {
     this.deltaTime = deltaTime;
 
-    this.moveDir = this.updatePosition(deltaTime);
+    if (this.isLocalPlayer) {
+      this.moveDir = this.updatePosition(deltaTime);
+    } else {
+      this.moveDir = this.moveNetworked(deltaTime);
+    }
 
     this.updateAnimation(this.moveDir);
 
-    this.handlePickup();
+    if (this.isLocalPlayer) {
+      this.handlePickup();
 
-    this.handleAction();
+      this.handleAction();
+    }
   }
 
   private handleAction() {
@@ -69,7 +88,7 @@ export class Player {
       this.moveDir.equals(Vector2.Zero())
     ) {
       if (this.interactables.length > 0 && this.interactables[0].startUse()) {
-         this.wasActionPressed = true;
+        this.wasActionPressed = true;
 
         this.currentInteractable = this.interactables[0];
       }
@@ -141,6 +160,10 @@ export class Player {
     this.interactables = this.interactables.filter((i) => i != interactable);
   }
 
+  public setPosition(position: Vector3) {
+    this.root.position = position;
+  }
+
   private updatePosition(deltaTime: number) {
     let direction = new Vector2(this.input.horizontal, this.input.vertical);
 
@@ -165,6 +188,12 @@ export class Player {
       );
     }
     return direction;
+  }
+
+  private moveNetworked(deltaTime: number): Vector2 {
+    let moveDir = Vector2.Zero();
+
+    return moveDir;
   }
 
   private updateAnimation(moveDir: Vector2) {
@@ -220,18 +249,22 @@ export class Player {
     this.root.isVisible = false;
 
     this.meshRoot = new TransformNode("playerMeshRoot", scene);
-    this.cameraRoot = new TransformNode("cameraRoot", scene);
 
     this.meshRoot.rotationQuaternion = Quaternion.Identity();
     this.meshRoot.parent = this.root;
-    this.cameraRoot.parent = this.root;
 
-    this.camera = new UniversalCamera("Camera", Vector3.Zero(), scene);
-    this.camera.parent = this.cameraRoot;
-    this.camera.position = new Vector3(0, 0, -10);
+    if (this.isLocalPlayer) {
+      this.cameraRoot = new TransformNode("cameraRoot", scene);
 
-    this.cameraRoot.position.y = 1.3;
-    this.cameraRoot.rotation.x = Math.PI * 0.2;
+      this.cameraRoot.parent = this.root;
+
+      this.camera = new UniversalCamera("Camera", Vector3.Zero(), scene);
+      this.camera.parent = this.cameraRoot;
+      this.camera.position = new Vector3(0, 0, -10);
+
+      this.cameraRoot.position.y = 1.3;
+      this.cameraRoot.rotation.x = Math.PI * 0.2;
+    }
 
     var result = await SceneLoader.ImportMeshAsync(
       "",

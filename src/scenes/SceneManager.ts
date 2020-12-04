@@ -25,13 +25,21 @@ export class SceneManager {
     this.scenes[SceneKeys.Menu] = new Scene_Menu(
       engine,
       networkManager,
+      this,
       canvas
     );
     this.scenes[SceneKeys.Scene_One] = new Scene_Level1(
       engine,
       networkManager,
+      this,
       canvas
     );
+
+    networkManager.onLoadSceneReceived.sub((k) => {
+      this.currentScene.dispose();
+      
+      this.loadScene(k);
+    });
 
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
@@ -49,7 +57,7 @@ export class SceneManager {
   public async loadScene(sceneKey: SceneKeys) {
     if (this.currentScene) {
       this.currentScene.onBeforeRenderObservable.clear();
-      this.currentScene.unload();
+      this.currentScene.dispose();
     }
 
     this.currentScene = await this.scenes[sceneKey].loadScene();

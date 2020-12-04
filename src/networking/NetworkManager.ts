@@ -1,9 +1,11 @@
 import Peer, { DataConnection } from "peerjs";
 import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
+import { SceneKeys } from "../scenes/SceneManager";
 import {
   INetworkMessage,
   NetworkMessageTypes,
 } from "./messageTypes/INetworkMessage";
+import { Message_LoadScene } from "./messageTypes/Message_LoadScene";
 import { Message_PlayerList } from "./messageTypes/Message_PlayerList";
 import { Message_RegisterPlayer } from "./messageTypes/Message_RegisterPlayer";
 
@@ -15,12 +17,13 @@ export class NetworkManager {
   public onConnectionClosed = new SignalDispatcher();
 
   public onPlayerNamesReceived = new SimpleEventDispatcher<string[]>();
+  public onLoadSceneReceived = new SimpleEventDispatcher<SceneKeys>();
 
   private peer: Peer;
 
   private connection: DataConnection;
 
-  private players = new Map<string, string>();
+  public players = new Map<string, string>();
 
   private logging = false;
 
@@ -69,6 +72,24 @@ export class NetworkManager {
     });
   }
 
+  public getPlayerIndex(playerId: string = this.peer.id): number {
+    let index = 0;
+    let i = 0;
+    this.players.forEach((v, k) => {
+      if (k.includes(playerId)) {
+        index = i;
+      }
+
+      i++;
+    });
+    
+    return index;
+  }
+
+  public isLocalPlayer(playerId: string): boolean{
+    return this.peer.id === playerId;
+  }
+
   private setupConnection() {
     this.connection.on("data", (data: any) => {
       this.logging
@@ -81,7 +102,9 @@ export class NetworkManager {
 
   public send(data: INetworkMessage) {
     if (this.connection) {
-      this.logging ? console.log("sending: " + data.type) : null;
+      this.logging
+        ? console.log("sending: " + NetworkMessageTypes[data.type])
+        : null;
 
       this.connection.send(data);
     }
@@ -99,11 +122,11 @@ export class NetworkManager {
 
           let playerNames: string[] = [];
 
-          this.players.forEach((p) => playerNames.push(p.valueOf()));
+          this.players.forEach((v, k) => playerNames.push(v));
 
           this.onPlayerNamesReceived.dispatch(playerNames);
 
-          this.send(new Message_PlayerList(playerNames));
+          this.send(new Message_PlayerList(this.players));
         }
         break;
 
@@ -111,7 +134,26 @@ export class NetworkManager {
         {
           let msg = message as Message_PlayerList;
 
-          this.onPlayerNamesReceived.dispatch(msg.data);
+          let playerNames: string[] = [];
+
+          this.players.clear();
+
+          msg.data.forEach((n) => {
+            this.players.set(n.split(",")[0], n.split(",")[1]);
+          });
+
+          this.players.forEach((p) => playerNames.push(p.valueOf()));
+
+          this.onPlayerNamesReceived.dispatch(playerNames);
+        }
+
+        break;
+
+      case NetworkMessageTypes.loadScene:
+        {
+          let msg = message as Message_LoadScene;
+
+          this.onLoadSceneReceived.dispatch(msg.data);
         }
 
         break;

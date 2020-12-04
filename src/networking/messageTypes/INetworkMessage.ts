@@ -1,6 +1,7 @@
-export enum NetworkMessageTypes{
-    registerPlayer,
-    playerList
+export enum NetworkMessageTypes {
+  registerPlayer,
+  playerList,
+  loadScene
 }
 
 export interface INetworkMessage {

@@ -5,7 +5,12 @@ export class Lobby {
   private root: StackPanel;
   private playerPanel: StackPanel;
 
-  constructor(adt: AdvancedDynamicTexture, isHost: boolean, roomName: string) {
+  constructor(
+    adt: AdvancedDynamicTexture,
+    isHost: boolean,
+    roomName: string,
+    onStart: () => void
+  ) {
     this.root = new StackPanel("lobby_root");
     this.root.width = 0.5;
 
@@ -24,7 +29,7 @@ export class Lobby {
     new Spacer(this.root, "spacer", "1", "20px");
 
     if (isHost) {
-      MenuButton(this.root, "startGame", "START", () => {});
+      MenuButton(this.root, "startGame", "START", onStart);
     }
   }
 

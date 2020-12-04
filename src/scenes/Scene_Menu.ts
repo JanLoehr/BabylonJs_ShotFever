@@ -1,6 +1,7 @@
 import {
   Engine,
   HemisphericLight,
+  Scene,
   UniversalCamera,
   Vector3,
 } from "@babylonjs/core";
@@ -10,6 +11,8 @@ import { Scene_Base } from "./Scene_Base";
 import { Message_RegisterPlayer } from "../networking/messageTypes/Message_RegisterPlayer";
 import { ConnectMenu } from "../ui/ConnectMenu";
 import { Lobby } from "../ui/LobbyMenu";
+import { Message_LoadScene } from "../networking/messageTypes/Message_LoadScene";
+import { SceneKeys, SceneManager } from "./SceneManager";
 
 export class Scene_Menu extends Scene_Base {
   private roomId: string;
@@ -22,13 +25,26 @@ export class Scene_Menu extends Scene_Base {
   constructor(
     engine: Engine,
     networkManager: NetworkManager,
+    sceneManager: SceneManager,
     canvas: HTMLCanvasElement
   ) {
-    super(engine, networkManager, canvas);
+    super(engine, networkManager, sceneManager, canvas);
   }
 
   public render() {
     super.render();
+  }
+
+  public dispose() {
+    if (this.connectMenu) {
+      this.connectMenu.dispose();
+    }
+    
+    if (this.lobbyMenu) {
+      this.lobbyMenu.dispose();
+    }
+
+    super.dispose();
   }
 
   public async loadScene() {
@@ -60,11 +76,19 @@ export class Scene_Menu extends Scene_Base {
   private showLobby(isHost: boolean) {
     this.connectMenu.dispose();
 
-    this.lobbyMenu = new Lobby(this.adt, isHost, this.roomId);
+    this.lobbyMenu = new Lobby(this.adt, isHost, this.roomId, () =>
+      this.startGame()
+    );
 
     this.networkManager.onPlayerNamesReceived.sub((names) => {
       this.lobbyMenu.setPlayers(names);
     });
+  }
+
+  private startGame() {
+    this.networkManager.send(new Message_LoadScene(SceneKeys.Scene_One));
+
+    this.sceneManager.loadScene(SceneKeys.Scene_One);
   }
 
   private tryHost() {
