@@ -7,7 +7,7 @@ import { SceneManager } from "./SceneManager";
 export class Scene_Base extends Scene {
   protected engine: Engine;
   protected canvas: HTMLCanvasElement;
-  protected networkManager: NetworkManager;
+  public networkManager: NetworkManager;
   protected sceneManager: SceneManager;
 
   public player: Player;

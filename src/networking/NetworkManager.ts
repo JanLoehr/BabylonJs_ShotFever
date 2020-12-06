@@ -1,5 +1,10 @@
+import { Vector3 } from "@babylonjs/core";
 import Peer, { DataConnection } from "peerjs";
-import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
+import {
+  EventDispatcher,
+  SignalDispatcher,
+  SimpleEventDispatcher,
+} from "strongly-typed-events";
 import { SceneKeys } from "../scenes/SceneManager";
 import {
   INetworkMessage,
@@ -7,6 +12,7 @@ import {
 } from "./messageTypes/INetworkMessage";
 import { Message_LoadScene } from "./messageTypes/Message_LoadScene";
 import { Message_PlayerList } from "./messageTypes/Message_PlayerList";
+import { Message_PlayerPosition } from "./messageTypes/Message_PlayerPosition";
 import { Message_RegisterPlayer } from "./messageTypes/Message_RegisterPlayer";
 
 export class NetworkManager {
@@ -19,11 +25,13 @@ export class NetworkManager {
   public onPlayerNamesReceived = new SimpleEventDispatcher<string[]>();
   public onLoadSceneReceived = new SimpleEventDispatcher<SceneKeys>();
 
+  public onPlayerPositionReceived = new EventDispatcher<string, Vector3>();
+
+  public players = new Map<string, string>();
+
   private peer: Peer;
 
   private connection: DataConnection;
-
-  public players = new Map<string, string>();
 
   private logging = false;
 
@@ -82,11 +90,11 @@ export class NetworkManager {
 
       i++;
     });
-    
+
     return index;
   }
 
-  public isLocalPlayer(playerId: string): boolean{
+  public isLocalPlayer(playerId: string): boolean {
     return this.peer.id === playerId;
   }
 
@@ -154,6 +162,19 @@ export class NetworkManager {
           let msg = message as Message_LoadScene;
 
           this.onLoadSceneReceived.dispatch(msg.data);
+        }
+
+        break;
+
+      case NetworkMessageTypes.playerPosition:
+        {
+          let msg = message as Message_PlayerPosition;
+
+          let position = new Vector3(msg.data[0], msg.data[1], msg.data[2]);
+
+          console.log("received pos", position);
+
+          this.onPlayerPositionReceived.dispatch("playerId", position);
         }
 
         break;

@@ -61,17 +61,17 @@ export class Scene_Level1 extends Scene_Base {
       );
       await player.loadPlayer(this);
 
-      if (isLocal) {
-        this.player = player;
-      }
-
-      let playerIndex = this.networkManager.getPlayerIndex(playerIds[i]);
+      let playerIndex = playerIds.indexOf(playerIds[i]);
 
       let spawnPoint = this.spawnPoints.find((s) =>
         s.name.includes(`_${playerIndex}`)
       );
 
       player.setPosition(spawnPoint.position);
+
+      if (isLocal) {
+        this.player = player;
+      }
     }
 
     for (let i = 0; i < levelGeo.meshes.length; i++) {

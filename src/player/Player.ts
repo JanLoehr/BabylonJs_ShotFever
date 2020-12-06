@@ -1,6 +1,7 @@
 import {
   AnimationGroup,
   Camera,
+  CubeMapToSphericalPolynomialTools,
   Matrix,
   Mesh,
   MeshBuilder,
@@ -13,14 +14,22 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { Interactable_Base } from "../interaction/interactable_base";
+import { Message_PlayerPosition } from "../networking/messageTypes/Message_PlayerPosition";
+import { Scene_Base } from "../scenes/Scene_Base";
 import { InputController } from "./InputController";
 
 export class Player {
   private PLAYER_SPEED: number = 5;
+  private SYNC_INTERVALL: number = 100;
+
+  private scene: Scene_Base;
 
   private isLocalPlayer: boolean;
   private networkId: string;
   private name: string;
+  private lastPosition: Vector3 = Vector3.Zero();
+  private lasSync: number = 0;
+  private positionCache: Vector3[] = [];
 
   private input: InputController;
   private moveDir: Vector2;
@@ -47,16 +56,24 @@ export class Player {
   private deltaTime: number;
 
   constructor(
-    scene: Scene,
+    scene: Scene_Base,
     canvas: HTMLCanvasElement,
     isLocalPlayer: boolean,
     networkId: string,
     name: string
   ) {
-    this.input = new InputController(scene);
+    this.scene = scene;
     this.isLocalPlayer = isLocalPlayer;
     this.networkId = networkId;
     this.name = name;
+
+    if (isLocalPlayer) {
+      this.input = new InputController(scene);
+    } else {
+      this.scene.networkManager.onPlayerPositionReceived.sub((s, p) => {
+        this.positionCache.push(p.clone());
+      });
+    }
 
     scene.onBeforeRenderObservable.add(() => {
       this.update(scene.getEngine().getDeltaTime() / 1000);
@@ -68,10 +85,25 @@ export class Player {
 
     if (this.isLocalPlayer) {
       this.moveDir = this.updatePosition(deltaTime);
+
+      if (
+        !this.root.position.equals(this.lastPosition) &&
+        Date.now() - this.lasSync > this.SYNC_INTERVALL
+      ) {
+        this.lastPosition = this.root.position.clone();
+        this.lasSync = Date.now();
+
+        console.log("sync", this.lastPosition);
+
+        this.scene.networkManager.send(
+          new Message_PlayerPosition(this.lastPosition)
+        );
+      }
     } else {
       this.moveDir = this.moveNetworked(deltaTime);
     }
 
+    this.updateRotation(this.moveDir, deltaTime);
     this.updateAnimation(this.moveDir);
 
     if (this.isLocalPlayer) {
@@ -165,7 +197,10 @@ export class Player {
   }
 
   private updatePosition(deltaTime: number) {
-    let direction = new Vector2(this.input.horizontal, this.input.vertical);
+    let direction = new Vector2(
+      this.input.horizontal,
+      this.input.vertical
+    ).normalize();
 
     let movement = new Vector3(
       direction.x * deltaTime * this.PLAYER_SPEED,
@@ -176,6 +211,40 @@ export class Player {
     this.root.moveWithCollisions(movement);
     this.root.position.y = 0;
 
+    return direction;
+  }
+
+  private moveNetworked(deltaTime: number): Vector2 {
+    let moveDir = Vector2.Zero();
+
+    if (this.positionCache.length > 0) {
+      let dir = this.positionCache[0].subtract(this.root.position);
+
+      if (dir.length() < 0.1 * this.positionCache.length) {
+        this.positionCache.shift();
+      } else if (dir.length() > 2) {
+        this.positionCache.shift();
+        this.root.position = this.positionCache[0];
+      } else {
+        moveDir = new Vector2(dir.x, dir.z).normalize();
+
+        let movement = new Vector3(
+          moveDir.x * deltaTime * this.PLAYER_SPEED,
+          0,
+          moveDir.y * deltaTime * this.PLAYER_SPEED
+        );
+
+        movement.scaleInPlace(1 + (this.positionCache.length - 1) / 10);
+
+        this.root.moveWithCollisions(movement);
+        this.root.position.y = 0;
+      }
+    }
+
+    return moveDir;
+  }
+
+  private updateRotation(direction: Vector2, deltaTime: number) {
     let target: Quaternion;
     if (!direction.equals(Vector2.Zero())) {
       let angle = Math.atan2(direction.x, direction.y);
@@ -187,13 +256,6 @@ export class Player {
         deltaTime * 10
       );
     }
-    return direction;
-  }
-
-  private moveNetworked(deltaTime: number): Vector2 {
-    let moveDir = Vector2.Zero();
-
-    return moveDir;
   }
 
   private updateAnimation(moveDir: Vector2) {

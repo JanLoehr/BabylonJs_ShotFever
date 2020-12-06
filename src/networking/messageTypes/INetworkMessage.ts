@@ -1,7 +1,8 @@
 export enum NetworkMessageTypes {
   registerPlayer,
   playerList,
-  loadScene
+  loadScene,
+  playerPosition
 }
 
 export interface INetworkMessage {
