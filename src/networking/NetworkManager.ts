@@ -11,6 +11,10 @@ import {
   NetworkMessageTypes,
 } from "./messageTypes/INetworkMessage";
 import { Message_LoadScene } from "./messageTypes/Message_LoadScene";
+import {
+  IPlayerInteractionData,
+  Message_PlayerInteraction,
+} from "./messageTypes/Message_PlayerInteraction";
 import { Message_PlayerList } from "./messageTypes/Message_PlayerList";
 import { Message_PlayerPosition } from "./messageTypes/Message_PlayerPosition";
 import { Message_RegisterPlayer } from "./messageTypes/Message_RegisterPlayer";
@@ -26,6 +30,10 @@ export class NetworkManager {
   public onLoadSceneReceived = new SimpleEventDispatcher<SceneKeys>();
 
   public onPlayerPositionReceived = new EventDispatcher<string, Vector3>();
+  public onPlayerInteractionReceived = new EventDispatcher<
+    string,
+    IPlayerInteractionData
+  >();
 
   public players = new Map<string, string>();
 
@@ -172,9 +180,29 @@ export class NetworkManager {
 
           let position = new Vector3(msg.data[0], msg.data[1], msg.data[2]);
 
-          console.log("received pos", position);
-
           this.onPlayerPositionReceived.dispatch("playerId", position);
+        }
+
+        break;
+
+      case NetworkMessageTypes.playerInteraction:
+        {
+          let msg = message as Message_PlayerInteraction;
+
+          let data: IPlayerInteractionData = {
+            interactionType: msg.data.interactionType,
+            objectId: msg.data.objectId,
+            position:
+              msg.data.position.length > 0
+                ? new Vector3(
+                    msg.data.position[0],
+                    msg.data.position[1],
+                    msg.data.position[2]
+                  )
+                : Vector3.Zero(),
+          };
+
+          this.onPlayerInteractionReceived.dispatch("playerId", data);
         }
 
         break;

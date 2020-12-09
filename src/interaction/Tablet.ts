@@ -15,7 +15,7 @@ import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Player } from "../player/Player";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { ProgressBar } from "../ui/ProgressBar";
-import { MeshTypes } from "../utils/MeshInstancer";
+import { InteractableTypes } from "../utils/MeshInstancer";
 import { Interactable_Base } from "./interactable_base";
 import { Needle } from "./Needle";
 import { Syringe } from "./Syringe";
@@ -39,8 +39,13 @@ export class Tablet extends Interactable_Base {
   private progressBar: ProgressBar;
   private guiTexture: AdvancedDynamicTexture;
 
-  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
-    super(scene, player, mesh, true, false);
+  constructor(
+    scene: Scene,
+    player: Player,
+    objectId: number,
+    mesh?: InstancedMesh
+  ) {
+    super(scene, objectId, player, mesh, true, false);
 
     let onPickBehavior = new OnPickBehavior();
     onPickBehavior.onPick.subscribe((sender, args) => {
@@ -138,31 +143,23 @@ export class Tablet extends Interactable_Base {
   }
 
   private async switchToSyringeNeedle() {
-    let syringe = new Interactable_Base(
-      this.scene,
-      this.player,
-      null,
-      true,
-      false
+    let syringe = await (this
+      .scene as Scene_Base).meshInstancer.getInteractable(
+      InteractableTypes.Syringe_Needle
     );
-    await syringe.loadAssets(MeshTypes.Syringe_Needle);
+
     syringe.mesh.setParent(null);
     syringe.mesh.position = this.mesh.position;
-    
 
     this.removefromPlayerInteractables();
     this.mesh.dispose();
   }
 
   private async addFinishedSyringe() {
-    this.finishedSyringe = new Interactable_Base(
-      this.scene,
-      this.player,
-      null,
-      false,
-      false
+    this.finishedSyringe = await (this
+      .scene as Scene_Base).meshInstancer.getInteractable(
+      InteractableTypes.Syringe_Needle
     );
-    await this.finishedSyringe.loadAssets(MeshTypes.Syringe_Needle);
 
     this.droppedNeedle.mesh.dispose();
     this.droppedSyringe.mesh.dispose();

@@ -8,7 +8,7 @@ import {
 import { PropSpawner } from "../interaction/PropSpawner";
 import { NetworkManager } from "../networking/NetworkManager";
 import { Player } from "../player/Player";
-import { MeshInstancer, MeshTypes } from "../utils/MeshInstancer";
+import { MeshInstancer, InteractableTypes } from "../utils/MeshInstancer";
 import { SceneManager } from "./SceneManager";
 import { Scene_Base } from "./Scene_Base";
 
@@ -21,7 +21,7 @@ export class Scene_Level1 extends Scene_Base {
   ) {
     super(engine, networkManager, sceneManager, canvas);
 
-    this.meshInstancer = new MeshInstancer("./models/", "Props.glb");
+    this.meshInstancer = new MeshInstancer("./models/", "Props.glb", this);
   }
 
   public async loadScene() {
@@ -74,6 +74,7 @@ export class Scene_Level1 extends Scene_Base {
       }
     }
 
+    let objectId = 0;
     for (let i = 0; i < levelGeo.meshes.length; i++) {
       let m = levelGeo.meshes[i];
 
@@ -86,9 +87,9 @@ export class Scene_Level1 extends Scene_Base {
       }
 
       if (m.name.includes("Spawner_")) {
-        let meshType = MeshTypes[m.name.split("_")[1]];
+        let meshType = InteractableTypes[m.name.split("_")[1]];
 
-        let spawner = new PropSpawner(meshType, m as Mesh, this);
+        let spawner = new PropSpawner(meshType, m as Mesh, this, objectId++);
       }
     }
 

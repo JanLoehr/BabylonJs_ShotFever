@@ -14,8 +14,13 @@ import { Interactable_Base } from "./interactable_base";
 export class Vaccine extends Interactable_Base {
   public needleSocket: TransformNode;
 
-  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
-    super(scene, player, mesh, true, false);
+  constructor(
+    scene: Scene,
+    player: Player,
+    objectId: number,
+    mesh?: InstancedMesh
+  ) {
+    super(scene, objectId, player, mesh, true, false);
 
     this.needleSocket = mesh
       .getChildTransformNodes()
@@ -24,7 +29,9 @@ export class Vaccine extends Interactable_Base {
 
   protected landItem(pick: PickingInfo) {
     if (pick.pickedMesh.name.includes("Tablet")) {
-      (pick.pickedMesh.getBehaviorByName("onPickBehavior") as OnPickBehavior).onPick.dispatch(this, "Vaccine");
+      (pick.pickedMesh.getBehaviorByName(
+        "onPickBehavior"
+      ) as OnPickBehavior).onPick.dispatch(this, "Vaccine");
     } else {
       super.landItem(pick);
     }

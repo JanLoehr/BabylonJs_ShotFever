@@ -12,13 +12,20 @@ import { Player } from "../player/Player";
 import { Interactable_Base } from "./interactable_base";
 
 export class Syringe extends Interactable_Base {
-  constructor(scene: Scene, player: Player, mesh?: InstancedMesh) {
-    super(scene, player, mesh, true, false);
+  constructor(
+    scene: Scene,
+    player: Player,
+    objectId: number,
+    mesh?: InstancedMesh
+  ) {
+    super(scene, objectId, player, mesh, true, false);
   }
 
   protected async landItem(pick: PickingInfo) {
     if (pick.pickedMesh.name.includes("Tablet")) {
-      (pick.pickedMesh.getBehaviorByName("onPickBehavior") as OnPickBehavior).onPick.dispatch(this, "Syringe");
+      (pick.pickedMesh.getBehaviorByName(
+        "onPickBehavior"
+      ) as OnPickBehavior).onPick.dispatch(this, "Syringe");
     } else {
       super.landItem(pick);
     }

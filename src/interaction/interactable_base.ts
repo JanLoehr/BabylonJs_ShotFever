@@ -13,10 +13,12 @@ import {
 import { SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
 import { Player } from "../player/Player";
 import { Scene_Base } from "../scenes/Scene_Base";
-import { MeshTypes } from "../utils/MeshInstancer";
+import { InteractableTypes } from "../utils/MeshInstancer";
 
 export class Interactable_Base {
   public mesh: InstancedMesh;
+
+  public objectId: number;
 
   protected scene: Scene;
   protected player: Player;
@@ -35,6 +37,7 @@ export class Interactable_Base {
 
   constructor(
     scene: Scene,
+    objectId: number,
     player: Player,
     mesh: InstancedMesh = null,
     canPickup: boolean = true,
@@ -57,14 +60,6 @@ export class Interactable_Base {
 
   protected update(deltaTime: number) {
     this.handlePickup(deltaTime);
-  }
-
-  public async loadAssets(meshType: MeshTypes) {
-    this.mesh = await (this.scene as Scene_Base).meshInstancer.getMeshInstance(
-      meshType
-    );
-
-    this.registerActions();
   }
 
   private registerActions() {

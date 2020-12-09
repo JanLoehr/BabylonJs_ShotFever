@@ -14,6 +14,11 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { Interactable_Base } from "../interaction/interactable_base";
+import {
+  InteractionTypes,
+  IPlayerInteractionData,
+  Message_PlayerInteraction,
+} from "../networking/messageTypes/Message_PlayerInteraction";
 import { Message_PlayerPosition } from "../networking/messageTypes/Message_PlayerPosition";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { InputController } from "./InputController";
@@ -70,9 +75,13 @@ export class Player {
     if (isLocalPlayer) {
       this.input = new InputController(scene);
     } else {
-      this.scene.networkManager.onPlayerPositionReceived.sub((s, p) => {
-        this.positionCache.push(p.clone());
-      });
+      this.scene.networkManager.onPlayerPositionReceived.sub((s, p) =>
+        this.positionCache.push(p.clone())
+      );
+
+      this.scene.networkManager.onPlayerInteractionReceived.sub((s, d) =>
+        this.handleInteraction_Remote(d)
+      );
     }
 
     scene.onBeforeRenderObservable.add(() => {
@@ -93,8 +102,6 @@ export class Player {
         this.lastPosition = this.root.position.clone();
         this.lasSync = Date.now();
 
-        console.log("sync", this.lastPosition);
-
         this.scene.networkManager.send(
           new Message_PlayerPosition(this.lastPosition)
         );
@@ -106,9 +113,9 @@ export class Player {
     this.updateRotation(this.moveDir, deltaTime);
     this.updateAnimation(this.moveDir);
 
-    if (this.isLocalPlayer) {
-      this.handlePickup();
+    this.handlePickup();
 
+    if (this.isLocalPlayer) {
       this.handleAction();
     }
   }
@@ -140,24 +147,42 @@ export class Player {
   }
 
   private handlePickup() {
-    if (this.input.pickupPressed && !this.wasPickupPressed) {
-      console.log(this.interactables);
-      if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
-        this.wasPickupPressed = true;
+    if (this.isLocalPlayer) {
+      if (this.input.pickupPressed && !this.wasPickupPressed) {
+        console.log(this.interactables);
+        if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
+          this.wasPickupPressed = true;
 
-        this.currentInteractable = this.interactables[0];
-        this.currentInteractable.mesh.setParent(this.interactor);
+          this.currentInteractable = this.interactables[0];
+          this.currentInteractable.mesh.setParent(this.interactor);
 
-        this.lerpInteractable = 0;
-      }
-    } else if (!this.input.pickupPressed && this.wasPickupPressed) {
-      this.wasPickupPressed = false;
+          this.lerpInteractable = 0;
+          console.log("send", this.currentInteractable.objectId);
+          this.scene.networkManager.send(
+            new Message_PlayerInteraction({
+              interactionType: InteractionTypes.pickup,
+              objectId: this.currentInteractable.objectId,
+            })
+          );
+        }
+      } else if (!this.input.pickupPressed && this.wasPickupPressed) {
+        this.wasPickupPressed = false;
 
-      if (this.currentInteractable) {
-        this.currentInteractable.mesh.setParent(null);
+        if (this.currentInteractable) {
+          this.currentInteractable.mesh.setParent(null);
 
-        this.currentInteractable.drop();
-        this.currentInteractable = undefined;
+          this.currentInteractable.drop();
+
+          this.scene.networkManager.send(
+            new Message_PlayerInteraction({
+              interactionType: InteractionTypes.drop,
+              objectId: this.currentInteractable.objectId,
+              position: this.currentInteractable.mesh.position,
+            })
+          );
+
+          this.currentInteractable = undefined;
+        }
       }
     }
 
@@ -181,6 +206,31 @@ export class Player {
         Quaternion.Identity(),
         this.lerpInteractable
       );
+    }
+  }
+
+  private handleInteraction_Remote(data: IPlayerInteractionData) {
+    switch (data.interactionType) {
+      case InteractionTypes.pickup:
+        this.currentInteractable = this.scene.meshInstancer.getById(
+          data.objectId
+        );
+        this.currentInteractable.mesh.setParent(this.interactor);
+
+        this.wasPickupPressed = true;
+        this.lerpInteractable = 0;
+        break;
+      case InteractionTypes.drop:
+        if (this.currentInteractable) {
+          this.currentInteractable.mesh.setParent(null);
+          this.currentInteractable.mesh.position = data.position;
+
+          this.wasPickupPressed = false;
+          this.currentInteractable.drop();
+
+          this.currentInteractable = undefined;
+        }
+        break;
     }
   }
 
