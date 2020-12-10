@@ -1,4 +1,5 @@
-import { InstancedMesh, Mesh, Vector3 } from "@babylonjs/core";
+import { InstancedMesh, Mesh, Quaternion, Vector3 } from "@babylonjs/core";
+import { Message_SpawnInteractable } from "../networking/messageTypes/Message_SpawnInteractable";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { MeshInstancer, InteractableTypes } from "../utils/MeshInstancer";
 import { Interactable_Base } from "./interactable_base";
@@ -14,27 +15,34 @@ export class PropSpawner {
 
   private currentInteractable: Interactable_Base;
 
-  constructor(
-    propType: InteractableTypes,
-    mesh: Mesh,
-    scene: Scene_Base,
-    objectId: number
-  ) {
+  constructor(propType: InteractableTypes, mesh: Mesh, scene: Scene_Base) {
     this.propType = propType;
     this.mesh = mesh;
     this.scene = scene;
 
-    this.spawnProp(objectId);
+    this.spawnProp();
   }
 
-  private async spawnProp(objectId: number) {
+  private async spawnProp() {
+    if (!this.scene.networkManager.isHost) {
+      return;
+    }
+
     let interacteble = await this.scene.meshInstancer.getInteractable(
       this.propType
     );
 
     interacteble.mesh.setParent(this.mesh);
     interacteble.mesh.position = new Vector3(0, 1, 0);
-    interacteble.objectId = objectId;
+
+    this.scene.networkManager.send(
+      new Message_SpawnInteractable({
+        interactbaleType: this.propType,
+        objectId: interacteble.objectId,
+        parentName: this.mesh.name,
+        position: new Vector3(0, 1, 0),
+      })
+    );
 
     interacteble.onPickup.one(() => this.onPickupProp());
     this.currentInteractable = interacteble;
@@ -43,6 +51,6 @@ export class PropSpawner {
   private onPickupProp() {
     this.currentInteractable = null;
 
-    setTimeout(() => this.spawnProp(100), 5000);
+    setTimeout(() => this.spawnProp(), 5000);
   }
 }

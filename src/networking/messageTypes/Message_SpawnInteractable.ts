@@ -1,33 +1,29 @@
 import { Quaternion, Vector3 } from "@babylonjs/core";
+import { InteractableTypes } from "../../utils/MeshInstancer";
 import { INetworkMessage, NetworkMessageTypes } from "./INetworkMessage";
 
-export enum InteractionTypes {
-  useSart,
-  useStop,
-  pickup,
-  drop,
-}
-
-export interface IPlayerInteractionData {
-  interactionType: InteractionTypes;
+export interface ISpawnInteractableData {
+  interactbaleType: InteractableTypes;
   objectId: number;
+  parentName?: string;
   position?: Vector3;
   rotation?: Quaternion;
 }
 
-export interface IPlayerInteractionData_DTO {
-  interactionType: InteractionTypes;
+export interface ISpawnInteractableData_DTO {
+  interactbaleType: InteractableTypes;
   objectId: number;
+  parentName: string;
   position: number[];
   rotation: number[];
 }
 
-export class Message_PlayerInteraction implements INetworkMessage {
+export class Message_SpawnInteractable implements INetworkMessage {
   type: NetworkMessageTypes;
-  data: IPlayerInteractionData_DTO;
+  data: ISpawnInteractableData_DTO;
 
-  constructor(data: IPlayerInteractionData) {
-    this.type = NetworkMessageTypes.playerInteraction;
+  constructor(data: ISpawnInteractableData) {
+    this.type = NetworkMessageTypes.spawnInteractable;
 
     let position = [];
     if (data.position) {
@@ -41,8 +37,9 @@ export class Message_PlayerInteraction implements INetworkMessage {
     }
 
     this.data = {
-      interactionType: data.interactionType,
+      interactbaleType: data.interactbaleType,
       objectId: data.objectId,
+      parentName: data.parentName,
       position: position,
       rotation: rotation,
     };

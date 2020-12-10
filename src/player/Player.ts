@@ -1,4 +1,5 @@
 import {
+  AbstractAssetTask,
   AnimationGroup,
   Camera,
   CubeMapToSphericalPolynomialTools,
@@ -130,6 +131,13 @@ export class Player {
         this.wasActionPressed = true;
 
         this.currentInteractable = this.interactables[0];
+
+        this.scene.networkManager.send(
+          new Message_PlayerInteraction({
+            interactionType: InteractionTypes.useSart,
+            objectId: this.currentInteractable.objectId,
+          })
+        );
       }
     } else if (
       (this.currentInteractable && // ActionKey Released
@@ -140,6 +148,13 @@ export class Player {
         !this.moveDir.equals(Vector2.Zero()))
     ) {
       this.wasActionPressed = false;
+
+      this.scene.networkManager.send(
+        new Message_PlayerInteraction({
+          interactionType: InteractionTypes.useStop,
+          objectId: this.currentInteractable.objectId,
+        })
+      );
 
       this.currentInteractable.stopUse();
       this.currentInteractable = null;
@@ -157,7 +172,7 @@ export class Player {
           this.currentInteractable.mesh.setParent(this.interactor);
 
           this.lerpInteractable = 0;
-          console.log("send", this.currentInteractable.objectId);
+
           this.scene.networkManager.send(
             new Message_PlayerInteraction({
               interactionType: InteractionTypes.pickup,
@@ -178,6 +193,7 @@ export class Player {
               interactionType: InteractionTypes.drop,
               objectId: this.currentInteractable.objectId,
               position: this.currentInteractable.mesh.position,
+              rotation: this.currentInteractable.mesh.rotationQuaternion,
             })
           );
 
@@ -209,29 +225,64 @@ export class Player {
     }
   }
 
-  private handleInteraction_Remote(data: IPlayerInteractionData) {
+  private async handleInteraction_Remote(data: IPlayerInteractionData) {
     switch (data.interactionType) {
       case InteractionTypes.pickup:
-        this.currentInteractable = this.scene.meshInstancer.getById(
-          data.objectId
-        );
-        this.currentInteractable.mesh.setParent(this.interactor);
+        {
+          this.currentInteractable = this.scene.meshInstancer.getById(
+            data.objectId
+          );
 
-        this.wasPickupPressed = true;
-        this.lerpInteractable = 0;
+          this.currentInteractable.pickUp();
+          this.currentInteractable.mesh.setParent(this.interactor);
+
+          this.wasPickupPressed = true;
+          this.lerpInteractable = 0;
+        }
         break;
+
       case InteractionTypes.drop:
-        if (this.currentInteractable) {
-          this.currentInteractable.mesh.setParent(null);
-          this.currentInteractable.mesh.position = data.position;
+        {
+          if (this.currentInteractable) {
+            this.currentInteractable.mesh.setParent(null);
 
-          this.wasPickupPressed = false;
-          this.currentInteractable.drop();
+            this.currentInteractable.mesh.position = data.position;
+            this.currentInteractable.mesh.rotationQuaternion = data.rotation;
+            this.currentInteractable.mesh.computeWorldMatrix();
 
-          this.currentInteractable = undefined;
+            this.currentInteractable.drop();
+            this.wasPickupPressed = false;
+
+            this.currentInteractable = null;
+          }
+        }
+        break;
+
+      case InteractionTypes.useSart:
+        {
+          this.wasActionPressed = true;
+
+          this.currentInteractable = this.scene.meshInstancer.getById(
+            data.objectId
+          );
+
+          this.currentInteractable.startUse();
+        }
+        break;
+
+      case InteractionTypes.useStop:
+        {
+          this.wasActionPressed = false;
+
+          this.currentInteractable.stopUse();
+          this.currentInteractable = null;
         }
         break;
     }
+  }
+
+  private sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   public addInteractable(interactable: Interactable_Base) {

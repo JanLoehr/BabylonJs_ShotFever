@@ -20,15 +20,15 @@ export class Interactable_Base {
 
   public objectId: number;
 
-  protected scene: Scene;
+  protected scene: Scene_Base;
   protected player: Player;
 
-  protected canPickup: boolean = true;
+  public canPickup: boolean = true;
   private pickedUp: boolean = false;
   private grounded: boolean = true;
   public onPickup = new SignalDispatcher();
 
-  protected canUse: boolean = true;
+  public canUse: boolean = true;
   protected isUsing: boolean = false;
   protected usingStarted: number = 0;
 
@@ -36,7 +36,7 @@ export class Interactable_Base {
   private gravity: number = 1;
 
   constructor(
-    scene: Scene,
+    scene: Scene_Base,
     objectId: number,
     player: Player,
     mesh: InstancedMesh = null,
@@ -47,6 +47,7 @@ export class Interactable_Base {
     this.player = player;
     this.canPickup = canPickup;
     this.canUse = canUse;
+    this.objectId = objectId;
 
     if (mesh) {
       this.mesh = mesh;
@@ -163,7 +164,6 @@ export class Interactable_Base {
           this.moveSpeed.y = this.moveSpeed.y - this.gravity;
         } else {
           this.moveSpeed = Vector3.Zero();
-
           this.landItem(pick);
         }
       }

@@ -9,13 +9,14 @@ import {
 } from "@babylonjs/core";
 import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Player } from "../player/Player";
+import { Scene_Base } from "../scenes/Scene_Base";
 import { Interactable_Base } from "./interactable_base";
 
 export class Syringe extends Interactable_Base {
   constructor(
-    scene: Scene,
-    player: Player,
+    scene: Scene_Base,
     objectId: number,
+    player: Player,
     mesh?: InstancedMesh
   ) {
     super(scene, objectId, player, mesh, true, false);

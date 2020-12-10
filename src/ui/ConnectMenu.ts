@@ -15,7 +15,8 @@ export class ConnectMenu {
     onHostChanged: (host: string) => {},
     onNameChanged: (name: string) => {},
     onHost: () => void,
-    onJoin: () => void
+    onJoin: () => void,
+    onStartSolo: () => void
   ) {
     let panel = new StackPanel();
     panel.width = 0.5;
@@ -40,6 +41,10 @@ export class ConnectMenu {
     MenuButton(panel, "hostButton", "Host", onHost);
 
     MenuButton(panel, "connectButton", "Connect", onJoin);
+    
+    new Spacer(panel, "soloSpaver", "1", "20px");
+
+    MenuButton(panel, "soloButton", "Start Solo", onStartSolo);
   }
 
   public dispose() {

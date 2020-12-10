@@ -12,6 +12,7 @@ import {
 } from "@babylonjs/core";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { OnPickBehavior } from "../behaviors/onPickBehavior";
+import { Message_SpawnInteractable } from "../networking/messageTypes/Message_SpawnInteractable";
 import { Player } from "../player/Player";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { ProgressBar } from "../ui/ProgressBar";
@@ -40,9 +41,9 @@ export class Tablet extends Interactable_Base {
   private guiTexture: AdvancedDynamicTexture;
 
   constructor(
-    scene: Scene,
-    player: Player,
+    scene: Scene_Base,
     objectId: number,
+    player: Player,
     mesh?: InstancedMesh
   ) {
     super(scene, objectId, player, mesh, true, false);
@@ -143,26 +144,41 @@ export class Tablet extends Interactable_Base {
   }
 
   private async switchToSyringeNeedle() {
-    let syringe = await (this
-      .scene as Scene_Base).meshInstancer.getInteractable(
-      InteractableTypes.Syringe_Needle
-    );
+    if (this.scene.networkManager.isHost) {
+      let syringe = await this.scene.meshInstancer.getInteractable(
+        InteractableTypes.Syringe_Needle
+      );
 
-    syringe.mesh.setParent(null);
-    syringe.mesh.position = this.mesh.position;
+      syringe.mesh.setParent(null);
+      syringe.mesh.position = this.mesh.position;
+
+      this.scene.networkManager.send(
+        new Message_SpawnInteractable({
+          interactbaleType: InteractableTypes.Syringe_Needle,
+          objectId: syringe.objectId,
+          parentName: null,
+          position: syringe.mesh.position,
+          rotation: syringe.mesh.rotationQuaternion,
+        })
+      );
+    }
 
     this.removefromPlayerInteractables();
     this.mesh.dispose();
   }
 
   private async addFinishedSyringe() {
-    this.finishedSyringe = await (this
-      .scene as Scene_Base).meshInstancer.getInteractable(
+    this.finishedSyringe = await this.scene.meshInstancer.getInteractable(
       InteractableTypes.Syringe_Needle
     );
 
     this.droppedNeedle.mesh.dispose();
     this.droppedSyringe.mesh.dispose();
+
+    this.finishedSyringe.canPickup = false;
+    this.finishedSyringe.canUse = false;
+
+    this.scene.player.removeInteractable(this.finishedSyringe);
 
     this.finishedSyringe.mesh.setParent(this.needleAnchor);
     this.finishedSyringe.mesh.position = Vector3.Zero();

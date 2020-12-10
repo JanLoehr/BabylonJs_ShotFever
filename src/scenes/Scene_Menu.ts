@@ -39,7 +39,7 @@ export class Scene_Menu extends Scene_Base {
     if (this.connectMenu) {
       this.connectMenu.dispose();
     }
-    
+
     if (this.lobbyMenu) {
       this.lobbyMenu.dispose();
     }
@@ -63,6 +63,9 @@ export class Scene_Menu extends Scene_Base {
       },
       () => {
         this.tryConnect();
+      },
+      () => {
+        this.startSolo();
       }
     );
 
@@ -91,6 +94,12 @@ export class Scene_Menu extends Scene_Base {
     this.sceneManager.loadScene(SceneKeys.Scene_One);
   }
 
+  private startSolo() {
+    this.networkManager.startLocal();
+
+    this.sceneManager.loadScene(SceneKeys.Scene_One);
+  }
+  
   private tryHost() {
     this.networkManager.startHost(this.roomId, this.playerName);
 

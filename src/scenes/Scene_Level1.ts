@@ -74,7 +74,6 @@ export class Scene_Level1 extends Scene_Base {
       }
     }
 
-    let objectId = 0;
     for (let i = 0; i < levelGeo.meshes.length; i++) {
       let m = levelGeo.meshes[i];
 
@@ -89,7 +88,7 @@ export class Scene_Level1 extends Scene_Base {
       if (m.name.includes("Spawner_")) {
         let meshType = InteractableTypes[m.name.split("_")[1]];
 
-        let spawner = new PropSpawner(meshType, m as Mesh, this, objectId++);
+        let spawner = new PropSpawner(meshType, m as Mesh, this);
       }
     }
 

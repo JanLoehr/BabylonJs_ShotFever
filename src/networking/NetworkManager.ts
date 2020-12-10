@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { Quaternion, Vector3 } from "@babylonjs/core";
 import Peer, { DataConnection } from "peerjs";
 import {
   EventDispatcher,
@@ -18,6 +18,10 @@ import {
 import { Message_PlayerList } from "./messageTypes/Message_PlayerList";
 import { Message_PlayerPosition } from "./messageTypes/Message_PlayerPosition";
 import { Message_RegisterPlayer } from "./messageTypes/Message_RegisterPlayer";
+import {
+  ISpawnInteractableData,
+  Message_SpawnInteractable,
+} from "./messageTypes/Message_SpawnInteractable";
 
 export class NetworkManager {
   public onConnectionOpened = new SimpleEventDispatcher<string>();
@@ -35,15 +39,22 @@ export class NetworkManager {
     IPlayerInteractionData
   >();
 
+  public onInteractableSpawnReceived = new SimpleEventDispatcher<ISpawnInteractableData>();
+
   public players = new Map<string, string>();
+  public isHost: boolean = false;
 
   private peer: Peer;
 
   private connection: DataConnection;
 
-  private logging = false;
+  private logging = true;
+
+  private isSolo = false;
 
   public startHost(hostId: string, playerName: string) {
+    this.isHost = true;
+
     this.peer = new Peer(hostId);
     this.logging ? console.log("start hosting: " + hostId) : null;
 
@@ -88,6 +99,13 @@ export class NetworkManager {
     });
   }
 
+  public startLocal() {
+    this.players.set("Solo", "Han");
+
+    this.isSolo = true;
+    this.isHost = true;
+  }
+
   public getPlayerIndex(playerId: string = this.peer.id): number {
     let index = 0;
     let i = 0;
@@ -103,7 +121,7 @@ export class NetworkManager {
   }
 
   public isLocalPlayer(playerId: string): boolean {
-    return this.peer.id === playerId;
+    return this.isSolo || this.peer.id === playerId;
   }
 
   private setupConnection() {
@@ -119,7 +137,7 @@ export class NetworkManager {
   public send(data: INetworkMessage) {
     if (this.connection) {
       this.logging
-        ? console.log("sending: " + NetworkMessageTypes[data.type])
+        ? console.log("sending: " + NetworkMessageTypes[data.type], data.data)
         : null;
 
       this.connection.send(data);
@@ -127,6 +145,13 @@ export class NetworkManager {
   }
 
   private receive(message: INetworkMessage) {
+    this.logging
+      ? console.log(
+          "received: " + NetworkMessageTypes[message.type],
+          message.data
+        )
+      : null;
+
     switch (message.type) {
       case NetworkMessageTypes.registerPlayer:
         {
@@ -200,9 +225,50 @@ export class NetworkManager {
                     msg.data.position[2]
                   )
                 : Vector3.Zero(),
+            rotation:
+              msg.data.rotation.length > 0
+                ? new Quaternion(
+                    msg.data.rotation[0],
+                    msg.data.rotation[1],
+                    msg.data.rotation[2],
+                    msg.data.rotation[3]
+                  )
+                : Quaternion.Identity(),
           };
 
           this.onPlayerInteractionReceived.dispatch("playerId", data);
+        }
+
+        break;
+
+      case NetworkMessageTypes.spawnInteractable:
+        {
+          let msg = message as Message_SpawnInteractable;
+
+          let data: ISpawnInteractableData = {
+            interactbaleType: msg.data.interactbaleType,
+            objectId: msg.data.objectId,
+            parentName: msg.data.parentName,
+            position:
+              msg.data.position.length > 0
+                ? new Vector3(
+                    msg.data.position[0],
+                    msg.data.position[1],
+                    msg.data.position[2]
+                  )
+                : Vector3.Zero(),
+            rotation:
+              msg.data.rotation.length > 0
+                ? new Quaternion(
+                    msg.data.rotation[0],
+                    msg.data.rotation[1],
+                    msg.data.rotation[2],
+                    msg.data.rotation[3]
+                  )
+                : Quaternion.Identity(),
+          };
+
+          this.onInteractableSpawnReceived.dispatch(data);
         }
 
         break;
