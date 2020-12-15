@@ -23,8 +23,10 @@ export class Interactable_Base {
   protected scene: Scene_Base;
   protected player: Player;
 
+  protected interactingPlayer: Player;
+
   public canPickup: boolean = true;
-  private pickedUp: boolean = false;
+  protected pickedUp: boolean = false;
   private grounded: boolean = true;
   public onPickup = new SignalDispatcher();
 
@@ -60,7 +62,7 @@ export class Interactable_Base {
   }
 
   protected update(deltaTime: number) {
-    this.handlePickup(deltaTime);
+    this.handleFalling(deltaTime);
   }
 
   private registerActions() {
@@ -91,8 +93,9 @@ export class Interactable_Base {
     );
   }
 
-  public pickUp(): boolean {
+  public pickUp(player: Player): boolean {
     if (this.canPickup && !this.isUsing) {
+      this.interactingPlayer = player;
       this.pickedUp = true;
 
       this.onPickup.dispatch();
@@ -104,6 +107,8 @@ export class Interactable_Base {
 
   public drop(): boolean {
     if (this.canPickup && !this.isUsing) {
+      this.interactingPlayer = null;
+
       this.pickedUp = false;
       this.grounded = false;
 
@@ -113,8 +118,9 @@ export class Interactable_Base {
     return false;
   }
 
-  public startUse(): boolean {
+  public startUse(player: Player): boolean {
     if (this.canUse && !this.pickedUp) {
+      this.interactingPlayer = player;
       this.isUsing = true;
       this.usingStarted = Date.now();
 
@@ -126,6 +132,7 @@ export class Interactable_Base {
 
   public stopUse(): boolean {
     if (this.canUse && !this.pickedUp) {
+      this.interactingPlayer = null;
       this.isUsing = false;
 
       return true;
@@ -135,6 +142,8 @@ export class Interactable_Base {
   }
 
   public setSocket(node: TransformNode) {}
+
+  public onInteractableEvent(eventName: string) {}
 
   protected addtoPlayerInteractables() {
     if (this.mesh.isPickable && (this.canUse || this.canPickup)) {
@@ -148,7 +157,7 @@ export class Interactable_Base {
     }
   }
 
-  private handlePickup(deltaTime: number) {
+  private handleFalling(deltaTime: number) {
     if (!this.moveSpeed.equals(Vector3.Zero())) {
       this.mesh.position = this.mesh.position.add(
         this.moveSpeed.scale(deltaTime)

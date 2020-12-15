@@ -7,6 +7,8 @@ export class OnPickBehavior implements Behavior<Mesh> {
 
   public onPick = new EventDispatcher<Interactable_Base, string>();
 
+  public meshOwner: any;
+
   public init(): void {}
   public attach(target: Mesh): void {}
   public detach(): void {}

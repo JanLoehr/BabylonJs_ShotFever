@@ -2,10 +2,12 @@ import { InstancedMesh, Mesh, SceneLoader } from "@babylonjs/core";
 import { Interactable_Base } from "../interaction/interactable_base";
 import { Needle } from "../interaction/Needle";
 import { Syringe } from "../interaction/Syringe";
+import { Syringe_Loaded } from "../interaction/Syringe_Loaded";
 import { Tablet } from "../interaction/Tablet";
 import { Vaccine } from "../interaction/Vaccine";
 import { ISpawnInteractableData } from "../networking/messageTypes/Message_SpawnInteractable";
 import { Scene_Base } from "../scenes/Scene_Base";
+
 
 export enum InteractableTypes {
   Syringe,
@@ -13,6 +15,7 @@ export enum InteractableTypes {
   Tablet,
   VaccineA,
   Syringe_Needle,
+  Syringe_Loaded
 }
 
 export class MeshInstancer {
@@ -44,7 +47,6 @@ export class MeshInstancer {
 
     //Object id from server
     let newObjectId = objectId === -1 ? this.objectId : objectId;
-    console.log(newObjectId);
 
     switch (interactableType) {
       case InteractableTypes.Needle:
@@ -85,6 +87,15 @@ export class MeshInstancer {
 
       case InteractableTypes.Syringe_Needle:
         interactable = new Interactable_Base(
+          this.scene,
+          newObjectId,
+          this.scene.player,
+          mesh
+        );
+        break;
+
+      case InteractableTypes.Syringe_Loaded:
+        interactable = new Syringe_Loaded(
           this.scene,
           newObjectId,
           this.scene.player,

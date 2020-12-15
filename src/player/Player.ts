@@ -1,8 +1,7 @@
 import {
-  AbstractAssetTask,
   AnimationGroup,
   Camera,
-  CubeMapToSphericalPolynomialTools,
+  Color3,
   Matrix,
   Mesh,
   MeshBuilder,
@@ -14,7 +13,11 @@ import {
   Vector2,
   Vector3,
 } from "@babylonjs/core";
+import { AdvancedDynamicTexture } from "@babylonjs/gui";
+import { OnPickBehavior } from "../behaviors/onPickBehavior";
 import { Interactable_Base } from "../interaction/interactable_base";
+import { Syringe_Loaded } from "../interaction/Syringe_Loaded";
+import { Message_PlayerEvent } from "../networking/messageTypes/Message_PlayerEvent";
 import {
   InteractionTypes,
   IPlayerInteractionData,
@@ -22,15 +25,17 @@ import {
 } from "../networking/messageTypes/Message_PlayerInteraction";
 import { Message_PlayerPosition } from "../networking/messageTypes/Message_PlayerPosition";
 import { Scene_Base } from "../scenes/Scene_Base";
+import { ProgressBar } from "../ui/ProgressBar";
 import { InputController } from "./InputController";
 
 export class Player {
   private PLAYER_SPEED: number = 5;
   private SYNC_INTERVALL: number = 100;
+  private VACCINATED_EFFECT_LENGTH: number = 5000;
 
   private scene: Scene_Base;
 
-  private isLocalPlayer: boolean;
+  public isLocalPlayer: boolean;
   private networkId: string;
   private name: string;
   private lastPosition: Vector3 = Vector3.Zero();
@@ -39,6 +44,7 @@ export class Player {
 
   private input: InputController;
   private moveDir: Vector2;
+  private inputMirrored: boolean = false;
 
   private camera: Camera;
   private root: Mesh;
@@ -59,6 +65,11 @@ export class Player {
   private wasPickupPressed: boolean = false;
   private wasActionPressed: boolean = false;
 
+  private guiTexture: AdvancedDynamicTexture;
+  private progressBar: ProgressBar;
+  private guiPlane: Mesh;
+  private vaccinatedStart: number;
+
   private deltaTime: number;
 
   constructor(
@@ -75,6 +86,10 @@ export class Player {
 
     if (isLocalPlayer) {
       this.input = new InputController(scene);
+
+      this.scene.networkManager.onPlayerEventReceived.sub((pId, event) =>
+        this.onPlayerEvent(pId, event)
+      );
     } else {
       this.scene.networkManager.onPlayerPositionReceived.sub((s, p) =>
         this.positionCache.push(p.clone())
@@ -121,13 +136,55 @@ export class Player {
     }
   }
 
+  private onPlayerEvent(pId: string, event: string): void {
+    if (event === "vaccinated" && this.networkId === pId) {
+      this.inputMirrored = true;
+
+      this.showVaccinatedProgress();
+    }
+  }
+
+  private onPicked(sender: Interactable_Base, args: string): void {
+    if ((sender as Syringe_Loaded) != null) {
+      this.scene.networkManager.send(
+        new Message_PlayerEvent({
+          playerId: this.networkId,
+          eventName: "vaccinated",
+        })
+      );
+
+      this.showVaccinatedProgress();
+    }
+  }
+
+  forcePickup(emptyNeedle: Interactable_Base) {
+    this.addInteractable(emptyNeedle);
+
+    emptyNeedle.pickUp(this);
+
+    this.currentInteractable = emptyNeedle;
+    this.currentInteractable.mesh.setParent(this.interactor);
+
+    this.lerpInteractable = 0;
+
+    this.scene.networkManager.send(
+      new Message_PlayerInteraction({
+        interactionType: InteractionTypes.pickup,
+        objectId: this.currentInteractable.objectId,
+      })
+    );
+  }
+
   private handleAction() {
     if (
       this.input.actionPressed &&
       !this.wasActionPressed &&
       this.moveDir.equals(Vector2.Zero())
     ) {
-      if (this.interactables.length > 0 && this.interactables[0].startUse()) {
+      if (
+        this.interactables.length > 0 &&
+        this.interactables[0].startUse(this)
+      ) {
         this.wasActionPressed = true;
 
         this.currentInteractable = this.interactables[0];
@@ -165,7 +222,10 @@ export class Player {
     if (this.isLocalPlayer) {
       if (this.input.pickupPressed && !this.wasPickupPressed) {
         console.log(this.interactables);
-        if (this.interactables.length > 0 && this.interactables[0].pickUp()) {
+        if (
+          this.interactables.length > 0 &&
+          this.interactables[0].pickUp(this)
+        ) {
           this.wasPickupPressed = true;
 
           this.currentInteractable = this.interactables[0];
@@ -233,7 +293,7 @@ export class Player {
             data.objectId
           );
 
-          this.currentInteractable.pickUp();
+          this.currentInteractable.pickUp(this);
           this.currentInteractable.mesh.setParent(this.interactor);
 
           this.wasPickupPressed = true;
@@ -266,7 +326,7 @@ export class Player {
             data.objectId
           );
 
-          this.currentInteractable.startUse();
+          this.currentInteractable.startUse(this);
         }
         break;
 
@@ -297,11 +357,50 @@ export class Player {
     this.root.position = position;
   }
 
+  private showVaccinatedProgress() {
+    let plane = MeshBuilder.CreatePlane("Player GUI", {});
+    plane.setParent(this.root);
+    plane.position = new Vector3(0, 2.5, 0);
+
+    this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+
+    this.progressBar = new ProgressBar(
+      this.guiTexture,
+      Color3.FromHexString("#D5E04B")
+    );
+
+    this.guiPlane = plane;
+
+    this.animateVaccinatedProgress();
+  }
+
+  private async animateVaccinatedProgress() {
+    this.vaccinatedStart = Date.now();
+
+    let normalizedLength: number;
+    while (this.vaccinatedStart + this.VACCINATED_EFFECT_LENGTH > Date.now()) {
+      await this.sleep(50);
+      normalizedLength =
+        (Date.now() - this.vaccinatedStart) / this.VACCINATED_EFFECT_LENGTH;
+
+      this.progressBar.setValue(1 - normalizedLength);
+    }
+
+    this.inputMirrored = false;
+
+    this.guiPlane.dispose();
+    this.guiTexture.dispose();
+  }
+
   private updatePosition(deltaTime: number) {
     let direction = new Vector2(
       this.input.horizontal,
       this.input.vertical
     ).normalize();
+
+    if (this.inputMirrored) {
+      direction.scaleInPlace(-1);
+    }
 
     let movement = new Vector3(
       direction.x * deltaTime * this.PLAYER_SPEED,
@@ -410,6 +509,11 @@ export class Player {
     this.root.bakeTransformIntoVertices(Matrix.Translation(0, 0.9, 0));
     this.root.checkCollisions = true;
     this.root.isVisible = false;
+
+    let onPickBehavior = new OnPickBehavior();
+    onPickBehavior.onPick.sub((sender, args) => this.onPicked(sender, args));
+    onPickBehavior.meshOwner = this;
+    this.root.addBehavior(onPickBehavior);
 
     this.meshRoot = new TransformNode("playerMeshRoot", scene);
 

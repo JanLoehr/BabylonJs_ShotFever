@@ -10,7 +10,12 @@ import {
   INetworkMessage,
   NetworkMessageTypes,
 } from "./messageTypes/INetworkMessage";
+import {
+  IInteractableEventData,
+  Message_InteractableEvent,
+} from "./messageTypes/Message_InteractableEvent";
 import { Message_LoadScene } from "./messageTypes/Message_LoadScene";
+import { Message_PlayerEvent } from "./messageTypes/Message_PlayerEvent";
 import {
   IPlayerInteractionData,
   Message_PlayerInteraction,
@@ -38,8 +43,10 @@ export class NetworkManager {
     string,
     IPlayerInteractionData
   >();
+  public onPlayerEventReceived = new EventDispatcher<string, string>();
 
   public onInteractableSpawnReceived = new SimpleEventDispatcher<ISpawnInteractableData>();
+  public onInteractableEvent = new SimpleEventDispatcher<IInteractableEventData>();
 
   public players = new Map<string, string>();
   public isHost: boolean = false;
@@ -269,6 +276,25 @@ export class NetworkManager {
           };
 
           this.onInteractableSpawnReceived.dispatch(data);
+        }
+
+        break;
+
+      case NetworkMessageTypes.interactableEvent:
+        {
+          let msg = message as Message_InteractableEvent;
+          this.onInteractableEvent.dispatch(msg.data);
+        }
+
+        break;
+
+      case NetworkMessageTypes.playerEvent:
+        {
+          let msg = message as Message_PlayerEvent;
+          this.onPlayerEventReceived.dispatch(
+            msg.data.playerId,
+            msg.data.eventName
+          );
         }
 
         break;

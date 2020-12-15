@@ -7,6 +7,7 @@ import {
   Rectangle,
   TextBlock,
 } from "@babylonjs/gui";
+import { ButtonLineComponent } from "@babylonjs/inspector/components/actionTabs/lines/buttonLineComponent";
 
 export class Header extends TextBlock {
   constructor(
@@ -80,13 +81,18 @@ export const MenuButton = (
   container: Container,
   name: string,
   text: string,
-  onClick: () => void
+  onPointerUp: () => void,
+  onPointerDown: () => void = null
 ): Button => {
   let button = Button.CreateSimpleButton(name, text);
   button.color = "white";
   button.width = 1;
   button.height = "40px";
-  button.onPointerUpObservable.add(onClick);
+  button.onPointerUpObservable.add(onPointerUp);
+
+  if (onPointerDown) {
+    button.onPointerDownObservable.add(onPointerDown);
+  }
 
   container.addControl(button);
 

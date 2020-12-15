@@ -1,4 +1,5 @@
 import { Engine, Scene, TransformNode } from "@babylonjs/core";
+import { IInteractableEventData } from "../networking/messageTypes/Message_InteractableEvent";
 import { NetworkManager } from "../networking/NetworkManager";
 import { Player } from "../player/Player";
 import { MeshInstancer } from "../utils/MeshInstancer";
@@ -15,6 +16,8 @@ export class Scene_Base extends Scene {
   public meshInstancer: MeshInstancer;
   protected spawnPoints: TransformNode[] = [];
 
+  private unsubFromOnInteractableEvent: () => void;
+
   constructor(
     engine: Engine,
     networkManager: NetworkManager,
@@ -27,6 +30,10 @@ export class Scene_Base extends Scene {
     this.networkManager = networkManager;
     this.sceneManager = sceneManager;
     this.canvas = canvas;
+
+    this.unsubFromOnInteractableEvent = this.networkManager.onInteractableEvent.sub((d) =>
+      this.onIteractableEvent(d)
+    );
   }
 
   public async loadScene(): Promise<Scene_Base> {
@@ -37,5 +44,15 @@ export class Scene_Base extends Scene {
 
   public render() {
     super.render();
+  }
+
+  public dispose(){
+    this.unsubFromOnInteractableEvent();
+    
+    super.dispose();
+  }
+  
+  protected onIteractableEvent(d: IInteractableEventData): void {
+    this.meshInstancer.getById(d.objectId).onInteractableEvent(d.eventName);
   }
 }

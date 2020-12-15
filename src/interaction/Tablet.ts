@@ -82,8 +82,8 @@ export class Tablet extends Interactable_Base {
     }
   }
 
-  public startUse(): boolean {
-    let using = super.startUse();
+  public startUse(player: Player): boolean {
+    let using = super.startUse(player);
 
     if (using) {
       this.finishedSyringe.mesh.setParent(this.droppedVaccine.needleSocket);
@@ -146,7 +146,7 @@ export class Tablet extends Interactable_Base {
   private async switchToSyringeNeedle() {
     if (this.scene.networkManager.isHost) {
       let syringe = await this.scene.meshInstancer.getInteractable(
-        InteractableTypes.Syringe_Needle
+        InteractableTypes.Syringe_Loaded
       );
 
       syringe.mesh.setParent(null);
@@ -154,7 +154,7 @@ export class Tablet extends Interactable_Base {
 
       this.scene.networkManager.send(
         new Message_SpawnInteractable({
-          interactbaleType: InteractableTypes.Syringe_Needle,
+          interactbaleType: InteractableTypes.Syringe_Loaded,
           objectId: syringe.objectId,
           parentName: null,
           position: syringe.mesh.position,

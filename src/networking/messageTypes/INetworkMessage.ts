@@ -4,7 +4,9 @@ export enum NetworkMessageTypes {
   loadScene,
   playerPosition,
   playerInteraction,
-  spawnInteractable
+  spawnInteractable,
+  interactableEvent,
+  playerEvent
 }
 
 export interface INetworkMessage {
