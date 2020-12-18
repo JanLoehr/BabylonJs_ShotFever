@@ -540,6 +540,8 @@ export class Player {
       scene
     );
 
+    console.log(result);
+
     result.meshes.forEach((m) => {
       m.isPickable = false;
       m.checkCollisions = false;
