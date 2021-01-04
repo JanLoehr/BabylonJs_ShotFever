@@ -10,6 +10,7 @@ import {
   INetworkMessage,
   NetworkMessageTypes,
 } from "./messageTypes/INetworkMessage";
+import { IAiEventData, Message_AiEvent } from "./messageTypes/Message_AiEvent";
 import {
   IInteractableEventData,
   Message_InteractableEvent,
@@ -44,6 +45,8 @@ export class NetworkManager {
     IPlayerInteractionData
   >();
   public onPlayerEventReceived = new EventDispatcher<string, string>();
+
+  public onAiEventReceived = new EventDispatcher<number, IAiEventData>();
 
   public onInteractableSpawnReceived = new SimpleEventDispatcher<ISpawnInteractableData>();
   public onInteractableEvent = new SimpleEventDispatcher<IInteractableEventData>();
@@ -294,6 +297,17 @@ export class NetworkManager {
           this.onPlayerEventReceived.dispatch(
             msg.data.playerId,
             msg.data.eventName
+          );
+        }
+
+        break;
+
+      case NetworkMessageTypes.aiEvent:
+        {
+          let msg = message as Message_AiEvent;
+          this.onAiEventReceived.dispatch(
+            msg.data.aiId,
+            msg.data
           );
         }
 

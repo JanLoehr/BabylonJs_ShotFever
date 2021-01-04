@@ -1,4 +1,5 @@
 import { Color3 } from "@babylonjs/core";
+import { Container } from "@babylonjs/gui";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Slider } from "@babylonjs/gui/2D/controls/sliders/slider";
 
@@ -7,6 +8,7 @@ export class ProgressBar {
 
   constructor(
     adt: AdvancedDynamicTexture,
+    container: Container,
     color: Color3 = Color3.Red(),
     width: number = 600,
     height: number = 200
@@ -20,7 +22,12 @@ export class ProgressBar {
     slider.height = `${height}px`;
     slider.width = `${width}px`;
 
-    adt.addControl(slider);
+    if (adt) {
+      adt.addControl(slider);
+    }
+    if (container) {
+      container.addControl(slider);
+    }
 
     this.slider = slider;
   }

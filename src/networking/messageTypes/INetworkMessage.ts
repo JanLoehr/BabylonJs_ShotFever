@@ -6,7 +6,8 @@ export enum NetworkMessageTypes {
   playerInteraction,
   spawnInteractable,
   interactableEvent,
-  playerEvent
+  playerEvent,
+  aiEvent
 }
 
 export interface INetworkMessage {

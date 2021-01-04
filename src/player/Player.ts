@@ -221,7 +221,8 @@ export class Player {
   private handlePickup() {
     if (this.isLocalPlayer) {
       if (this.input.pickupPressed && !this.wasPickupPressed) {
-        console.log(this.interactables);
+        // console.log(this.interactables);
+
         if (
           this.interactables.length > 0 &&
           this.interactables[0].pickUp(this)
@@ -362,11 +363,14 @@ export class Player {
     plane.setParent(this.root);
     plane.position = new Vector3(0, 2.5, 0);
 
-    this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+    this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane, 256, 256);
 
     this.progressBar = new ProgressBar(
       this.guiTexture,
-      Color3.FromHexString("#D5E04B")
+      null,
+      Color3.FromHexString("#D5E04B"),
+      256,
+      60
     );
 
     this.guiPlane = plane;
@@ -540,7 +544,7 @@ export class Player {
       scene
     );
 
-    console.log(result);
+    // console.log(result);
 
     result.meshes.forEach((m) => {
       m.isPickable = false;

@@ -3,6 +3,7 @@ import {
   Button,
   Container,
   Control,
+  Image,
   InputText,
   Rectangle,
   TextBlock,
@@ -77,7 +78,7 @@ export class TextInput extends InputText {
   }
 }
 
-export const MenuButton = (
+export const GuiButton = (
   container: Container,
   name: string,
   text: string,
@@ -98,3 +99,11 @@ export const MenuButton = (
 
   return button;
 };
+
+export const GuiIcon = (constainer: Container, imageName: string): Image => {
+  let image = new Image(imageName, `./images/${imageName}.png`);
+
+  constainer.addControl(image);
+
+  return image;
+}

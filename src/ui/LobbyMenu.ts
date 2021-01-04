@@ -1,5 +1,5 @@
 import { AdvancedDynamicTexture, StackPanel } from "@babylonjs/gui";
-import { Header, Label, MenuButton, Spacer } from "./Controls";
+import { Header, Label, GuiButton, Spacer } from "./Controls";
 
 export class Lobby {
   private root: StackPanel;
@@ -29,7 +29,7 @@ export class Lobby {
     new Spacer(this.root, "spacer", "1", "20px");
 
     if (isHost) {
-      MenuButton(this.root, "startGame", "START", onStart);
+      GuiButton(this.root, "startGame", "START", onStart);
     }
   }
 

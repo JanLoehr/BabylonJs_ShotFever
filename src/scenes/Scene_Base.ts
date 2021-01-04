@@ -1,4 +1,5 @@
 import { Engine, Scene, TransformNode } from "@babylonjs/core";
+import { AIManager } from "../ai/AIManager";
 import { IInteractableEventData } from "../networking/messageTypes/Message_InteractableEvent";
 import { NetworkManager } from "../networking/NetworkManager";
 import { Player } from "../player/Player";
@@ -8,12 +9,16 @@ import { SceneManager } from "./SceneManager";
 export class Scene_Base extends Scene {
   protected engine: Engine;
   protected canvas: HTMLCanvasElement;
+
   public networkManager: NetworkManager;
-  protected sceneManager: SceneManager;
-
+  
   public player: Player;
-
+  
   public meshInstancer: MeshInstancer;
+  
+  protected sceneManager: SceneManager;
+  protected aiManager: AIManager;
+  
   protected spawnPoints: TransformNode[] = [];
 
   private unsubFromOnInteractableEvent: () => void;
@@ -27,9 +32,10 @@ export class Scene_Base extends Scene {
     super(engine);
 
     this.engine = engine;
-    this.networkManager = networkManager;
-    this.sceneManager = sceneManager;
     this.canvas = canvas;
+    this.sceneManager = sceneManager;
+    this.networkManager = networkManager;
+    this.aiManager = new AIManager(this);
 
     this.unsubFromOnInteractableEvent = this.networkManager.onInteractableEvent.sub((d) =>
       this.onIteractableEvent(d)
@@ -48,6 +54,7 @@ export class Scene_Base extends Scene {
 
   public dispose(){
     this.unsubFromOnInteractableEvent();
+    this.aiManager.dispose();
     
     super.dispose();
   }

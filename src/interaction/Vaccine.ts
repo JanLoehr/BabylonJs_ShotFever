@@ -12,6 +12,12 @@ import { Player } from "../player/Player";
 import { Scene_Base } from "../scenes/Scene_Base";
 import { Interactable_Base } from "./interactable_base";
 
+export enum VaccineTypes {
+  yellow,
+  blue,
+  red,
+}
+
 export class Vaccine extends Interactable_Base {
   public needleSocket: TransformNode;
 

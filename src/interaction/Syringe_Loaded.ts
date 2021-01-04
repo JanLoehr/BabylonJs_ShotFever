@@ -32,8 +32,6 @@ export class Syringe_Loaded extends Interactable_Base {
     this.rayAnchor = mesh.getChildTransformNodes(true, (t) =>
       t.name.includes("Ray_Anchor")
     )[0];
-
-    console.log(this.rayAnchor);
   }
 
   protected update(deltaTime: number) {

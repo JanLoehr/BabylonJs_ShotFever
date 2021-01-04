@@ -1,6 +1,6 @@
 import { ActionManager, ExecuteCodeAction, Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Control, StackPanel } from "@babylonjs/gui";
-import { MenuButton, Spacer } from "../ui/Controls";
+import { GuiButton, Spacer } from "../ui/Controls";
 import { VirtualJoystick } from "../ui/VirtualJoystick";
 
 export class InputController {
@@ -55,7 +55,7 @@ export class InputController {
 
       let buttonSize = "60px";
 
-      let takeButton = MenuButton(
+      let takeButton = GuiButton(
         panel,
         "takeButton",
         "Take",
@@ -73,7 +73,7 @@ export class InputController {
 
       new Spacer(panel, "buttonSpacer", "30px", "1");
 
-      let useButton = MenuButton(
+      let useButton = GuiButton(
         panel,
         "useButton",
         "Use",

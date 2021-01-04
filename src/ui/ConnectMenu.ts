@@ -5,7 +5,7 @@ import {
   StackPanel,
   TextBlock,
 } from "@babylonjs/gui";
-import { Header, MenuButton, Spacer, TextInput } from "./Controls";
+import { Header, GuiButton, Spacer, TextInput } from "./Controls";
 
 export class ConnectMenu {
   private root: StackPanel;
@@ -38,13 +38,13 @@ export class ConnectMenu {
 
     new Spacer(panel, "buttonSpacer", "1", "20px");
 
-    MenuButton(panel, "hostButton", "Host", onHost);
+    GuiButton(panel, "hostButton", "Host", onHost);
 
-    MenuButton(panel, "connectButton", "Connect", onJoin);
+    GuiButton(panel, "connectButton", "Connect", onJoin);
     
     new Spacer(panel, "soloSpaver", "1", "20px");
 
-    MenuButton(panel, "soloButton", "Start Solo", onStartSolo);
+    GuiButton(panel, "soloButton", "Start Solo", onStartSolo);
   }
 
   public dispose() {

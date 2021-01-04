@@ -3,7 +3,7 @@ import { EventDispatcher } from "strongly-typed-events";
 import { Interactable_Base } from "../interaction/interactable_base";
 
 export class OnPickBehavior implements Behavior<Mesh> {
-  name: string = "onPickBehavior";
+  public name: string = "onPickBehavior";
 
   public onPick = new EventDispatcher<Interactable_Base, string>();
 

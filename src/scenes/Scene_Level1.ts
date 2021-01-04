@@ -3,6 +3,7 @@ import {
   HemisphericLight,
   Mesh,
   SceneLoader,
+  TransformNode,
   Vector3,
 } from "@babylonjs/core";
 import { PropSpawner } from "../interaction/PropSpawner";
@@ -34,13 +35,22 @@ export class Scene_Level1 extends Scene_Base {
       this
     );
 
+    let pathEnter: TransformNode[] = [];
+    let pathExit: TransformNode[] = [];
+
     for (let i = 0; i < levelGeo.transformNodes.length; i++) {
       let t = levelGeo.transformNodes[i];
 
       if (t.name.includes("SpawnPoint")) {
         this.spawnPoints.push(t);
+      } else if (t.name.includes("AI_Path_Enter")) {
+        pathEnter.push(t);
+      } else if (t.name.includes("AI_Path_Exit")) {
+        pathExit.push(t);
       }
     }
+
+    this.aiManager.setPaths(pathEnter, pathExit);
 
     let playerIds: string[] = [];
     let playerNames: string[] = [];
@@ -67,7 +77,7 @@ export class Scene_Level1 extends Scene_Base {
         s.name.includes(`_${playerIndex}`)
       );
 
-      player.setPosition(spawnPoint.position);
+      player.setPosition(spawnPoint.position.multiply(new Vector3(-1, -1, 1)));
 
       if (isLocal) {
         this.player = player;

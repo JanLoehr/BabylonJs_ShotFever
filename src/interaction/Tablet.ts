@@ -1,5 +1,6 @@
 import {
   BouncingBehavior,
+  Color3,
   FadeInOutBehavior,
   InstancedMesh,
   Mesh,
@@ -94,9 +95,15 @@ export class Tablet extends Interactable_Base {
       plane.setParent(this.mesh);
       plane.position = new Vector3(0, 1.5, 0);
 
-      this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane);
+      this.guiTexture = AdvancedDynamicTexture.CreateForMesh(plane, 256, 256);
 
-      this.progressBar = new ProgressBar(this.guiTexture);
+      this.progressBar = new ProgressBar(
+        this.guiTexture,
+        null,
+        Color3.Red(),
+        256,
+        60
+      );
 
       this.guiPlane = plane;
     }
